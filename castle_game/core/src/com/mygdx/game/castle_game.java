@@ -57,8 +57,8 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     //Contendrá el frame que se va a mostrar en cada momento.
     private TextureRegion cuadroActual;
 
-    private boolean[][] obstaculo, agujero;
-    private TiledMapTileLayer capaObstaculos, capaAgujeros;
+    private boolean[][] obstaculo, agujero, barco;
+    private TiledMapTileLayer capaObstaculos, capaAgujeros, capaBarco;
 
     //Atributos que indican la anchura y altura del sprite animado del jugador.
     int anchoJugador, altoJugador;
@@ -95,9 +95,10 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     private Sound sonidoColisionEnemigo;
     private Sound sonidoObstaculo;
     private Sound sonidoCaida;
+    private Sound sonidoBarco;
 
     //Caida en agujero
-    private boolean caida, cazado;
+    private boolean caida, cazado, hundido;
 
     // Objeto font para mensaje en pantalla
     private BitmapFont font;
@@ -173,6 +174,19 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         for (int x = 0; x < anchoCapa; x++) {
             for (int y = 0; y < altoCapa; y++) {
                 agujero[x][y] = (capaAgujeros.getCell(x, y) != null);
+            }
+        }
+
+        //Cargamos la capa del barco, que es la quinta en el TiledMap.
+        capaBarco = (TiledMapTileLayer) mapa.getLayers().get(4);
+
+        //Cargamos la matriz de los obstáculos del mapa de baldosas.
+        anchoCapa = capaBarco.getWidth();
+        altoCapa = capaBarco.getHeight();
+        barco = new boolean[anchoCapa][altoCapa];
+        for (int x = 0; x < anchoCapa; x++) {
+            for (int y = 0; y < altoCapa; y++) {
+                barco[x][y] = (capaBarco.getCell(x, y) != null);
             }
         }
 
@@ -254,6 +268,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         sonidoPasos = Gdx.audio.newSound(Gdx.files.internal("sonidos/Fantozzi-SandR3.ogg"));
         sonidoObstaculo = Gdx.audio.newSound(Gdx.files.internal("sonidos/wall.ogg"));
         sonidoCaida = Gdx.audio.newSound(Gdx.files.internal("sonidos/fall.ogg"));
+        sonidoBarco = Gdx.audio.newSound(Gdx.files.internal("sonidos/boat.ogg"));
     }
 
     @Override
@@ -283,7 +298,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         mapaRenderer.setView(camara);
 
         //Dibujamos las cinco primeras capas del TiledMap (no incluye a la de altura)
-        int[] capas = {0, 1, 2, 3, 4};
+        int[] capas = {0, 1, 2, 3, 4, 5};
         mapaRenderer.render(capas);
 
         // extraemos el tiempo de la última actualización del sprite y la acumulamos a stateTime.
@@ -296,67 +311,66 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         //Inicializamos el objeto SpriteBatch
         sb.begin();
 
-        //Pintamos el objeto Sprite a través del objeto SpriteBatch
-        sb.draw(cuadroActual, jugadorX, jugadorY);
+        if (!cazado && !caida && !hundido) {
+            //Pintamos el objeto Sprite a través del objeto SpriteBatch
+            sb.draw(cuadroActual, jugadorX, jugadorY);
+            if (Gdx.input.isKeyPressed(Input.Keys.UP))
+                actualizaPC(Input.Keys.UP);
+            if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
+                actualizaPC(Input.Keys.DOWN);
+            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
+                actualizaPC(Input.Keys.RIGHT);
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
+                actualizaPC(Input.Keys.LEFT);
 
-        /*if (Gdx.input.isKeyPressed(Input.Keys.UP))
-            actualizaPC(Input.Keys.UP);
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
-            actualizaPC(Input.Keys.DOWN);
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-            actualizaPC(Input.Keys.RIGHT);
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
-            actualizaPC(Input.Keys.LEFT);*/
-
-        //Dibujamos las animaciones de los NPC
-        for (int i = 0; i < numeroNPCs; i++) {
-            actualizaNPC(i, 0.5f);
-            cuadroActual = (TextureRegion) noJugador[i].getKeyFrame(stateTimeNPC);
-            sb.draw(cuadroActual, noJugadorX[i], noJugadorY[i]);
-        }
-
-        //Finalizamos el objeto SpriteBatch
-        sb.end();
-
-        //Pintamos la quinta capa del mapa de baldosas.
-        capas = new int[1];
-        capas[0] = 5;
-        mapaRenderer.render(capas);
-
-        //Comprobamos si hay o no colisiones entre el jugador y los obstáculos
-        detectaColisiones();
-
-        if (caida || cazado) {
+            //Dibujamos las animaciones de los NPC
+            for (int i = 0; i < numeroNPCs; i++) {
+                actualizaNPC(i, 0.5f);
+                cuadroActual = (TextureRegion) noJugador[i].getKeyFrame(stateTimeNPC);
+                sb.draw(cuadroActual, noJugadorX[i], noJugadorY[i]);
+            }
+            //Finalizamos el objeto SpriteBatch
+            sb.end();
+            //Pintamos la quinta capa del mapa de baldosas.
+            capas = new int[1];
+            capas[0] = 6;
+            mapaRenderer.render(capas);
+        } else {
             // Pinta la pantalla en negro y desactiva los sonidos
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
             sonidoPasos.stop();
-
+            sb = new SpriteBatch();
+            font = new BitmapFont();
             if (caida) {
                 musica.stop();
                 sonidoColisionEnemigo.stop();
                 // Muestra mensaje de caida
-                CharSequence str = "Has caido a un agujero!\nJuego terminado";
-                sb = new SpriteBatch();
-                font = new BitmapFont();
+                CharSequence str = "¡Has caido a un agujero!\nJuego terminado";
                 sb.begin();
                 font.setColor(Color.RED);
                 font.draw(sb, str, (camara.viewportWidth / 2f) - 100f, (camara.viewportHeight / 2f) + 25f);
                 sb.end();
             }
-
             if (cazado) {
                 musica.stop();
                 sonidoColisionEnemigo.play(0.25f);
                 // Muestra mensaje de cazado
-                CharSequence str = "Has sido atrapado por un enemigo!\nJuego terminado";
-                sb = new SpriteBatch();
-                font = new BitmapFont();
+                CharSequence str = "¡Has sido atrapado por un enemigo!\nJuego terminado";
                 sb.begin();
                 font.setColor(Color.RED);
                 font.draw(sb, str, (camara.viewportWidth / 2f) - 100f, (camara.viewportHeight / 2f) + 25f);
                 sb.end();
             }
-
+            if (hundido) {
+                musica.stop();
+                sonidoColisionEnemigo.stop();
+                // Muestra mensaje de hundido
+                CharSequence str = "¡Te has hundido en el barco!\nJuego terminado";
+                sb.begin();
+                font.setColor(Color.RED);
+                font.draw(sb, str, (camara.viewportWidth / 2f) - 100f, (camara.viewportHeight / 2f) + 25f);
+                sb.end();
+            }
             // Espera 3 segundos y cierra el juego
             new java.util.Timer().schedule(
                     new java.util.TimerTask() {
@@ -388,38 +402,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         //provocando que la misma se reinicie.
         stateTimePC = 0;
 
-        //Guardamos la posición anterior del jugador por si al desplazarlo se topa
-        //con un obstáculo y podamos volverlo a la posición anterior.
-        float jugadorAnteriorX = jugadorX;
-        float jugadorAnteriorY = jugadorY;
-
         actualizaPC(keycode);
-
-        // Detectamos las colisiones con los obstáculos del mapa y si el jugador se sale del mismo.
-        // para poner al jugador en su posición anterior
-        if ((jugadorX < 0 || jugadorY < 0 ||
-                jugadorX > (mapaAncho - anchoJugador) ||
-                jugadorY > (mapaAlto - altoJugador)) ||
-                ((obstaculo[(int) ((jugadorX + anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]) ||
-                        (obstaculo[(int) ((jugadorX + 3 * anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]))) {
-            jugadorX = jugadorAnteriorX;
-            jugadorY = jugadorAnteriorY;
-            sonidoObstaculo.play(0.5f);
-        } else {
-            sonidoPasos.play(0.25f);
-        }
-
-        // Detectamos las caídas en los agujeros del mapa.
-        if ((jugadorX < 0 || jugadorY < 0 ||
-                jugadorX > (mapaAncho - anchoJugador) ||
-                jugadorY > (mapaAlto - altoJugador)) ||
-                ((agujero[(int) ((jugadorX + anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]) ||
-                        (agujero[(int) ((jugadorX + 3 * anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]))) {
-            caida = true;
-            sonidoCaida.play(0.5f);
-        } else {
-            sonidoPasos.play(0.25f);
-        }
 
         //Si pulsamos la tecla del número 1, se alterna la visibilidad de la primera capa
         //del mapa de baldosas.
@@ -429,15 +412,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         //del mapa de baldosas.
         if (keycode == Input.Keys.NUM_2)
             mapa.getLayers().get(1).setVisible(!mapa.getLayers().get(1).isVisible());
-
-        // al chocar con un obstáculo el jugador vuelve a su posición inicial
-        // la parte izquierda de X es "X + 1/4 del ancho del jugador"
-        // la parte derecha de X es "X + 3/4 del ancho del jugador"
-        if ((obstaculo[(int) ((jugadorX + anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)])
-                || (obstaculo[(int) ((jugadorX + 3 * anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)])) {
-            jugadorX = jugadorAnteriorX;
-            jugadorY = jugadorAnteriorY;
-        }
         return true;
     }
 
@@ -500,6 +474,13 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         } else {
             sonidoPasos.play(0.25f);
         }
+
+        //Comprobamos si hay o no colisiones entre el jugador y los obstáculos
+        colisionObstaculo(jugadorAnteriorX, jugadorAnteriorY);
+        colisionNPC();
+        caidaAgujero();
+        caidaBarco();
+
         return true;
     }
 
@@ -521,6 +502,18 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     @Override
     public boolean scrolled(int amount) {
         return false;
+    }
+    
+    @Override
+    public void dispose() {
+        sb.dispose();
+        img.dispose();
+        mapa.dispose();
+        mapaRenderer.dispose();
+        musica.dispose();
+        sonidoObstaculo.dispose();
+        sonidoPasos.dispose();
+        sonidoColisionEnemigo.dispose();
     }
 
     //Método que permite cambiar las coordenadas del NPC en la posición "i",
@@ -545,7 +538,13 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     }
 
     private void actualizaPC(int keycode) {
-        int speed = 3;
+        stateTimePC = 0;
+        //Guardamos la posición anterior del jugador por si al desplazarlo se topa
+        //con un obstáculo y podamos volverlo a la posición anterior.
+        float jugadorAnteriorX = jugadorX;
+        float jugadorAnteriorY = jugadorY;
+
+        int speed = 2;
         if (keycode == Input.Keys.LEFT) {
             jugadorX += -speed;
             jugador = jugadorIzquierda;
@@ -566,9 +565,14 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             jugador = jugadorAbajo;
             jugadorAbajo.setPlayMode(Animation.PlayMode.LOOP);
         }
+        //Comprobamos si hay o no colisiones entre el jugador y los obstáculos
+        colisionObstaculo(jugadorAnteriorX, jugadorAnteriorY);
+        colisionNPC();
+        caidaAgujero();
+        caidaBarco();
     }
 
-    private void detectaColisiones() {
+    private void colisionNPC() {
         //Vamos a comprobar que el rectángulo que rodea al jugador, no se solape
         //con el rectángulo de alguno de los NPC. Primero calculamos el rectángulo
         //en torno al jugador.
@@ -584,21 +588,53 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 //de sonido, una animación del jugador alternativa y, posiblemente, que este muera
                 //y se acabe la partida actual. En principio, en este caso, lo único que se hace
                 //es mostrar un mensaje en la consola de texto.
-                System.out.println("Has sido atrapado!");
+                System.out.println("¡Has sido atrapado!");
                 cazado = true;
             }
         }
     }
 
-    @Override
-    public void dispose() {
-        sb.dispose();
-        img.dispose();
-        mapa.dispose();
-        mapaRenderer.dispose();
-        musica.dispose();
-        sonidoObstaculo.dispose();
-        sonidoPasos.dispose();
-        sonidoColisionEnemigo.dispose();
+    private void colisionObstaculo(float jugadorAnteriorX, float jugadorAnteriorY) {
+        // Detectamos las colisiones con los obstáculos del mapa y si el jugador se sale del mismo.
+        // para poner al jugador en su posición anterior
+        if ((jugadorX < 0 || jugadorY < 0 ||
+                jugadorX > (mapaAncho - anchoJugador) ||
+                jugadorY > (mapaAlto - altoJugador)) ||
+                ((obstaculo[(int) ((jugadorX + anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]) ||
+                        (obstaculo[(int) ((jugadorX + 3 * anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]))) {
+            jugadorX = jugadorAnteriorX;
+            jugadorY = jugadorAnteriorY;
+            sonidoObstaculo.play(0.5f);
+        } else {
+            sonidoPasos.play(0.25f);
+        }
+    }
+
+    private void caidaAgujero() {
+        // Detectamos las caídas en los agujeros del mapa.
+        if ((jugadorX < 0 || jugadorY < 0 ||
+                jugadorX > (mapaAncho - anchoJugador) ||
+                jugadorY > (mapaAlto - altoJugador)) ||
+                ((agujero[(int) ((jugadorX + anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]) ||
+                        (agujero[(int) ((jugadorX + 3 * anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]))) {
+            caida = true;
+            sonidoCaida.play(0.5f);
+        } else {
+            sonidoPasos.play(0.25f);
+        }
+    }
+
+    private void caidaBarco() {
+        // Detectamos si se sube al barco y este se hunde.
+        if ((jugadorX < 0 || jugadorY < 0 ||
+                jugadorX > (mapaAncho - anchoJugador) ||
+                jugadorY > (mapaAlto - altoJugador)) ||
+                ((barco[(int) ((jugadorX + anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]) ||
+                        (barco[(int) ((jugadorX + 3 * anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]))) {
+            hundido = true;
+            sonidoBarco.play(1f);
+        } else {
+            sonidoPasos.play(0.25f);
+        }
     }
 }
