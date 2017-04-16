@@ -341,34 +341,44 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             sonidoPasos.stop();
             sb = new SpriteBatch();
             font = new BitmapFont();
+            font.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+            font.getData().setScale(2f);
+            sb.begin();
+            CharSequence str = "GAME OVER";
+            font.setColor(Color.RED);
+            font.draw(sb, str, (camara.viewportWidth / 2f) - 75f, (camara.viewportHeight / 2f) + 35f);
+            sb.end();
             if (caida) {
                 musica.stop();
                 sonidoColisionEnemigo.stop();
                 // Muestra mensaje de caida
-                CharSequence str = "¡Has caido a un agujero!\nJuego terminado";
+                CharSequence str2 = "¡Has caido a un agujero!";
                 sb.begin();
+                font.getData().setScale(1.5f);
                 font.setColor(Color.RED);
-                font.draw(sb, str, (camara.viewportWidth / 2f) - 100f, (camara.viewportHeight / 2f) + 25f);
+                font.draw(sb, str2, (camara.viewportWidth / 2f) - 100f, (camara.viewportHeight / 2f) + 10f);
                 sb.end();
             }
             if (cazado) {
                 musica.stop();
                 sonidoColisionEnemigo.play(0.25f);
                 // Muestra mensaje de cazado
-                CharSequence str = "¡Has sido atrapado por un enemigo!\nJuego terminado";
+                CharSequence str3 = "¡Has sido atrapado por un enemigo!";
                 sb.begin();
+                font.getData().setScale(1.5f);
                 font.setColor(Color.RED);
-                font.draw(sb, str, (camara.viewportWidth / 2f) - 100f, (camara.viewportHeight / 2f) + 25f);
+                font.draw(sb, str3, (camara.viewportWidth / 2f) - 150f, (camara.viewportHeight / 2f) + 10f);
                 sb.end();
             }
             if (hundido) {
                 musica.stop();
                 sonidoColisionEnemigo.stop();
                 // Muestra mensaje de hundido
-                CharSequence str = "¡Te has hundido en el barco!\nJuego terminado";
+                CharSequence str4 = "¡Te has hundido en el barco!";
                 sb.begin();
+                font.getData().setScale(1.5f);
                 font.setColor(Color.RED);
-                font.draw(sb, str, (camara.viewportWidth / 2f) - 100f, (camara.viewportHeight / 2f) + 25f);
+                font.draw(sb, str4, (camara.viewportWidth / 2f) - 125f, (camara.viewportHeight / 2f) + 10f);
                 sb.end();
             }
             // Espera 3 segundos y cierra el juego
@@ -503,7 +513,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     public boolean scrolled(int amount) {
         return false;
     }
-    
+
     @Override
     public void dispose() {
         sb.dispose();
@@ -538,7 +548,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     }
 
     private void actualizaPC(int keycode) {
-        stateTimePC = 0;
         //Guardamos la posición anterior del jugador por si al desplazarlo se topa
         //con un obstáculo y podamos volverlo a la posición anterior.
         float jugadorAnteriorX = jugadorX;
