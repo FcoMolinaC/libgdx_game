@@ -23,71 +23,67 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 
 public class castle_game extends ApplicationAdapter implements InputProcessor {
-    //Objeto que recoge el mapa de baldosas
+    // Objeto que recoge el mapa de baldosas
     private TiledMap mapa;
-    //Objeto con el que se pinta el mapa de baldosas
+    // Objeto con el que se pinta el mapa de baldosas
     private OrthogonalTiledMapRenderer mapaRenderer;
-    // Cámara que nos da la vista del juego
+    // Camara que nos da la vista del juego
     private OrthographicCamera camara;
-    // Atributo en el que se cargará la hoja de sprites del mosquetero.
+    // Atributo en el que se cargara la hoja de sprites del personaje.
     private Texture img;
-    //Atributo que permite dibujar imágenes 2D, en este caso el sprite.
+    // Atributo que permite dibujar imagenes 2D, en este caso el sprite.
     private SpriteBatch sb;
 
     private static final int FRAME_COLS = 4;
     private static final int FRAME_ROWS = 4;
 
-    //Animación que se muestra en el método render()
+    // Animacion que se muestra en el metodo render()
     private Animation jugador;
-    //Animaciones para cada una de las direcciones de movimiento del personaje del jugador.
+    // Animaciones para cada una de las direcciones de movimiento del personaje del jugador.
     private Animation jugadorArriba;
     private Animation jugadorDerecha;
     private Animation jugadorAbajo;
     private Animation jugadorIzquierda;
-    // Tamaño del mapa de baldosas.
+    // Tamano del mapa de baldosas.
     private int mapaAncho, mapaAlto;
-    //Atributos que indican la anchura y la altura de un tile del mapa de baldosas
+    // Atributos que indican la anchura y la altura de un tile del mapa de baldosas
     int anchoCelda, altoCelda;
-    //Posición actual del jugador.
+    // Posicion actual del jugador.
     private float jugadorX, jugadorY;
-    // Este atributo indica el tiempo en segundos transcurridos desde que se inicia la animación
-    // , servirá para determinar cual es el frame que se debe representar.
+    // Este atributo indica el tiempo en segundos transcurridos desde que se inicia la animacion
     private float stateTimePC;
 
-    //Contendrá el frame que se va a mostrar en cada momento.
+    // Frame que se va a mostrar en cada momento.
     private TextureRegion cuadroActual;
 
     private boolean[][] obstaculo, agujero, barco;
     private TiledMapTileLayer capaObstaculos, capaAgujeros, capaBarco;
 
-    //Atributos que indican la anchura y altura del sprite animado del jugador.
+    // Atributos que indican la anchura y altura del sprite animado del jugador.
     int anchoJugador, altoJugador;
 
-    //Animaciones posicionales relacionadas con los NPC del juego
+    // Animaciones posicionales relacionadas con los NPC del juego
     private Animation noJugadorArriba;
     private Animation noJugadorDerecha;
     private Animation noJugadorAbajo;
     private Animation noJugadorIzquierda;
 
-    //Array con los objetos Animation de los NPC
+    // Array con los objetos Animation de los NPC
     private Animation[] noJugador;
-    //Atributos que indican la anchura y altura del sprite animado de los NPC.
+    // Atributos que indican la anchura y altura del sprite animado de los NPC.
     int anchoNoJugador, altoNoJugador;
-    //Posición inicial X de cada uno de los NPC
+    // Posiciones iniciales de cada uno de los NPC
     private float[] noJugadorX;
-    //Posición inicial Y de cada uno de los NPC
     private float[] noJugadorY;
-    //Posición final X de cada uno de los NPC
+    // Posiciones finales de cada uno de los NPC
     private float[] destinoX;
-    //Posición final Y de cada uno de los NPC
     private float[] destinoY;
-    //Número de NPC que van a aparecer en el juego
+    // Numero de NPC que aparecen en el juego
     private static final int numeroNPCs = 5;
-    // Este atributo indica el tiempo en segundos transcurridos desde que se inicia la animación
-    //de los NPC , servirá para determinar cual es el frame que se debe representar.
+    // Atributo que indica el tiempo en segundos transcurridos desde que se inicia la animacion
     private float stateTimeNPC = 0;
 
-    // Música de fondo del juego
+    // Musica de fondo del juego
     private Music musica;
 
     // Sonidos
@@ -97,28 +93,32 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     private Sound sonidoCaida;
     private Sound sonidoBarco;
 
-    //Caida en agujero
+    // Booleanos para fin de juego
     private boolean caida, cazado, hundido;
 
-    // Objeto font para mensaje en pantalla
+    // Objeto font para mensajes en pantalla
     private BitmapFont font;
 
+    /**
+     * Metodo create. Carga y crea objetos y atributos del juego
+     *
+     * @param
+     * @return
+     */
     @Override
     public void create() {
-        //Creamos una cámara y la vinculamos con el lienzo del juego.
-        //En este caso le damos unos valores de tamaño que haga que el juego
-        //se muestre de forma idéntica en todas las plataformas.
+        // Crea una camara y la vincula con el lienzo del juego
         camara = new OrthographicCamera(640, 480);
-        //Posicionamos la vista de la cámara para que su vértice inferior izquierdo sea (0,0)
+        // Posiciona la vista de la camara para que su vertice inferior izquierdo sea (0,0)
         camara.position.set(camara.viewportWidth / 2f, camara.viewportHeight / 2f, 0);
-        //Vinculamos los eventos de entrada a esta clase.
+        // Vincula los eventos de entrada a esta clase.
         Gdx.input.setInputProcessor(this);
         camara.update();
 
-        // Cargamos la imagen de los frames del mosquetero en el objeto img de la clase Texture.
+        // Carga la imagen de los frames del jugagor en el objeto img de la clase Texture.
         img = new Texture(Gdx.files.internal("jugadores/jugador.png"));
 
-        //Sacamos los frames de img en un array de TextureRegion.
+        // Saca los frames de img en un array de TextureRegion.
         TextureRegion[][] tmp = TextureRegion.split(img, img.getWidth() / FRAME_COLS, img.getHeight() / FRAME_ROWS);
 
         jugadorArriba = new Animation(0.150f, tmp[3]);
@@ -126,36 +126,31 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         jugadorAbajo = new Animation(0.150f, tmp[0]);
         jugadorIzquierda = new Animation(0.150f, tmp[1]);
 
-        //En principio se utiliza la animación del jugador abajo como animación por defecto.
+        // Posicion inicial
         jugador = jugadorAbajo;
-
         jugadorX = 220;
         jugadorY = 410;
-        //Ponemos a cero el atributo stateTime, que marca el tiempo e ejecución de la animación.
+        //Pone a cero el atributo stateTime, que marca el tiempo de ejecucion de la animacion.
         stateTimePC = 0f;
 
-        //Creamos el objeto SpriteBatch que nos permitirá representar adecuadamente el sprite
-        //en el método render()
+        // Crea el objeto SpriteBatch
         sb = new SpriteBatch();
 
-        //Cargamos el mapa de baldosas desde la carpeta de assets
+        // Carga el mapa de baldosas desde la carpeta de assets
         mapa = new TmxMapLoader().load("mapa/mapa.tmx");
         mapaRenderer = new OrthogonalTiledMapRenderer(mapa);
 
-        //Determinamos el alto y ancho del mapa de baldosas. Para ello necesitamos extraer la capa
-        //base del mapa y, a partir de ella, determinamos el número de celdas a lo ancho y alto,
-        //así como el tamaño de la celda, que multiplicando por el número de celdas a lo alto y
-        //ancho, da como resultado el alto y ancho en pixeles del mapa.
+        // Determina el alto y ancho del mapa de baldosas
         TiledMapTileLayer capa = (TiledMapTileLayer) mapa.getLayers().get(0);
         anchoCelda = (int) capa.getTileWidth();
         altoCelda = (int) capa.getTileHeight();
         mapaAncho = capa.getWidth() * anchoCelda;
         mapaAlto = capa.getHeight() * altoCelda;
 
-        //Cargamos la capa de los obstáculos, que es la tercera en el TiledMap.
+        // Carga la capa de los obstaculos, tercera en el TiledMap.
         capaObstaculos = (TiledMapTileLayer) mapa.getLayers().get(2);
 
-        //Cargamos la matriz de los obstáculos del mapa de baldosas.
+        // Carga la matriz de los obstaculos del mapa de baldosas.
         int anchoCapa = capaObstaculos.getWidth(), altoCapa = capaObstaculos.getHeight();
         obstaculo = new boolean[anchoCapa][altoCapa];
         for (int x = 0; x < anchoCapa; x++) {
@@ -164,10 +159,10 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             }
         }
 
-        //Cargamos la capa de los obstáculos, que es la tercera en el TiledMap.
+        // Carga la capa de los agujeros, cuarta en el TiledMap.
         capaAgujeros = (TiledMapTileLayer) mapa.getLayers().get(3);
 
-        //Cargamos la matriz de los obstáculos del mapa de baldosas.
+        // Carga la matriz de los obstaculos del mapa de baldosas.
         anchoCapa = capaAgujeros.getWidth();
         altoCapa = capaAgujeros.getHeight();
         agujero = new boolean[anchoCapa][altoCapa];
@@ -177,10 +172,10 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             }
         }
 
-        //Cargamos la capa del barco, que es la quinta en el TiledMap.
+        // Carga la capa del barco, quinta en el TiledMap.
         capaBarco = (TiledMapTileLayer) mapa.getLayers().get(4);
 
-        //Cargamos la matriz de los obstáculos del mapa de baldosas.
+        // Carga la matriz de los obstaculos del mapa de baldosas.
         anchoCapa = capaBarco.getWidth();
         altoCapa = capaBarco.getHeight();
         barco = new boolean[anchoCapa][altoCapa];
@@ -190,27 +185,26 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             }
         }
 
-        //Cargamos en los atributos del ancho y alto del sprite sus valores
+        // Carga en los atributos del ancho y alto del sprite sus valores
         cuadroActual = (TextureRegion) jugador.getKeyFrame(stateTimePC);
         anchoJugador = cuadroActual.getRegionHeight() / 2;//ajustamos las colisiones H
         altoJugador = cuadroActual.getRegionHeight();
 
-        //Inicializamos el apartado referente a los NPC
+        // Inicializa el apartado referente a los NPC
         noJugador = new Animation[numeroNPCs];
         noJugadorX = new float[numeroNPCs];
         noJugadorY = new float[numeroNPCs];
         destinoX = new float[numeroNPCs];
         destinoY = new float[numeroNPCs];
 
-        //Creamos las animaciones posicionales de los NPC
-        //Cargamos la imagen de los frames del monstruo en el objeto img de la clase Texture.
+        // Crea las animaciones posicionales de los NPC
+        // Carga la imagen de los frames del enemigo en el objeto img de la clase Texture.
         img = new Texture(Gdx.files.internal("jugadores/enemigo.png"));
 
-        //Sacamos los frames de img en un array de TextureRegion.
+        // Sacamos los frames de img en un array de TextureRegion.
         tmp = TextureRegion.split(img, img.getWidth() / FRAME_COLS, img.getHeight() / FRAME_ROWS);
 
-        // Creamos las distintas animaciones, teniendo en cuenta que el tiempo de muestra de cada frame
-        // será de 150 milisegundos.
+        // Crea las distintas animaciones
         noJugadorArriba = new Animation(0.150f, tmp[3]);//0
         noJugadorArriba.setPlayMode(Animation.PlayMode.LOOP);
         noJugadorDerecha = new Animation(0.150f, tmp[2]);//1
@@ -220,14 +214,12 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         noJugadorIzquierda = new Animation(0.150f, tmp[1]);//3
         noJugadorIzquierda.setPlayMode(Animation.PlayMode.LOOP);
 
-        //Cargamos en los atributos del ancho y alto del sprite del monstruo sus valores
+        // Carga en los atributos del ancho y alto del sprite del enemigo sus valores
         cuadroActual = (TextureRegion) noJugadorAbajo.getKeyFrame(stateTimeNPC);
         anchoNoJugador = cuadroActual.getRegionWidth() / 2;
         altoNoJugador = cuadroActual.getRegionHeight();
 
-        //Se inicializan, la animación por defecto y, de forma aleatoria, las posiciones
-        //iniciales y finales de los NPC. Para simplificar un poco, los NPC pares, se moveran
-        //de forma vertical y los impares de forma horizontal.
+        // Se inicializan, la animacion por defecto y, de forma aleatoria, las posiciones iniciales y finales de los NPC
         for (int i = 0; i < numeroNPCs; i++) {
             noJugadorX[i] = (float) (Math.random() * mapaAncho);
             noJugadorY[i] = (float) (Math.random() * mapaAlto);
@@ -236,7 +228,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 // NPC par => mover de forma vertical
                 destinoX[i] = noJugadorX[i];
                 destinoY[i] = (float) (Math.random() * mapaAlto);
-                //Determinamos cual de las animaciones verticales se utiliza.
                 if (noJugadorY[i] < destinoY[i]) {
                     noJugador[i] = noJugadorArriba;
                 } else {
@@ -246,7 +237,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 // NPC impar => mover de forma horizontal
                 destinoX[i] = (float) (Math.random() * mapaAncho);
                 destinoY[i] = noJugadorY[i];
-                //Determinamos cual de las animaciones horizontales se utiliza.
                 if (noJugadorX[i] < destinoX[i]) {
                     noJugador[i] = noJugadorDerecha;
                 } else {
@@ -255,15 +245,13 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             }
         }
 
-        // Ponemos a cero el atributo stateTimeNPC, que marca el tiempo e ejecución de la animación
-        // de los NPC.
         stateTimeNPC = 0f;
 
-        //Inicializamos la música de fondo del juego y la reproducimos.
+        // Inicializa la musica de fondo del juego.
         musica = Gdx.audio.newMusic(Gdx.files.internal("sonidos/main.mp3"));
         musica.play();
 
-        //Inicializamos los atributos de los efectos de sonido.
+        // Inicializa los atributos de los efectos de sonido.
         sonidoColisionEnemigo = Gdx.audio.newSound(Gdx.files.internal("sonidos/qubodup-PowerDrain.ogg"));
         sonidoPasos = Gdx.audio.newSound(Gdx.files.internal("sonidos/Fantozzi-SandR3.ogg"));
         sonidoObstaculo = Gdx.audio.newSound(Gdx.files.internal("sonidos/wall.ogg"));
@@ -271,48 +259,41 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         sonidoBarco = Gdx.audio.newSound(Gdx.files.internal("sonidos/boat.ogg"));
     }
 
+    /**
+     * Metodo render. Muestra en pantalla el juego, animaciones y mensajes
+     *
+     * @param
+     * @return
+     */
     @Override
     public void render() {
-        //Ponemos el color del fondo a negro
         Gdx.gl.glClearColor(0, 0, 0, 1);
-        //Borramos la pantalla
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        //Trasladamos la cámara para que se centre en el mosquetero.
         camara.position.set(jugadorX, jugadorY, 0f);
-        //Comprobamos que la cámara no se salga de los límites del mapa de baldosas,
-        //Verificamos, con el método clamp(), que el valor de la posición x de la cámara
-        //esté entre la mitad de la anchura de la vista de la cámara y entre la diferencia entre
-        //la anchura del mapa restando la mitad de la anchura de la vista de la cámara,
+        // Comprueba que la camara no se salga de los limites del mapa de baldosas.
         camara.position.x = MathUtils.clamp(camara.position.x, camara.viewportWidth / 2f,
                 mapaAncho - camara.viewportWidth / 2f);
-        //Verificamos, con el método clamp(), que el valor de la posición y de la cámara
-        //esté entre la mitad de la altura de la vista de la cámara y entre la diferencia entre
-        //la altura del mapa restando la mitad de la altura de la vista de la cámara,
         camara.position.y = MathUtils.clamp(camara.position.y, camara.viewportHeight / 2f,
                 mapaAlto - camara.viewportHeight / 2f);
 
-        //Actualizamos la cámara del juego
         camara.update();
-        //Vinculamos el objeto de dibuja el TiledMap con la cámara del juego
         mapaRenderer.setView(camara);
 
-        //Dibujamos las cinco primeras capas del TiledMap (no incluye a la de altura)
+        // Dibuja las seis primeras capas del TiledMap (no incluye a la de altura).
         int[] capas = {0, 1, 2, 3, 4, 5};
         mapaRenderer.render(capas);
 
-        // extraemos el tiempo de la última actualización del sprite y la acumulamos a stateTime.
+        // Extrae el tiempo de la ultima actualizacion del sprite y la acumula a stateTime.
         stateTimePC += Gdx.graphics.getDeltaTime();
-        //Extraermos el frame que debe ir asociado a al momento actual.
+        // Extrae el frame que debe ir asociado a al momento actual.
         cuadroActual = (TextureRegion) jugador.getKeyFrame(stateTimePC);
-        // le indicamos al SpriteBatch que se muestre en el sistema de coordenadas
-        // específicas de la cámara.
         sb.setProjectionMatrix(camara.combined);
-        //Inicializamos el objeto SpriteBatch
+
         sb.begin();
 
         if (!cazado && !caida && !hundido) {
-            //Pintamos el objeto Sprite a través del objeto SpriteBatch
+            // Pinta el objeto Sprite a traves del objeto SpriteBatch
             sb.draw(cuadroActual, jugadorX, jugadorY);
             if (Gdx.input.isKeyPressed(Input.Keys.UP))
                 actualizaPC(Input.Keys.UP);
@@ -323,15 +304,14 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
                 actualizaPC(Input.Keys.LEFT);
 
-            //Dibujamos las animaciones de los NPC
+            // Dibuja las animaciones de los NPC
             for (int i = 0; i < numeroNPCs; i++) {
                 actualizaNPC(i, 0.5f);
                 cuadroActual = (TextureRegion) noJugador[i].getKeyFrame(stateTimeNPC);
                 sb.draw(cuadroActual, noJugadorX[i], noJugadorY[i]);
             }
-            //Finalizamos el objeto SpriteBatch
             sb.end();
-            //Pintamos la quinta capa del mapa de baldosas.
+            // Pinta la septima capa del mapa de baldosas.
             capas = new int[1];
             capas[0] = 6;
             mapaRenderer.render(capas);
@@ -351,7 +331,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             if (caida) {
                 musica.stop();
                 sonidoColisionEnemigo.stop();
-                // Muestra mensaje de caida
                 CharSequence str2 = "¡Has caido a un agujero!";
                 sb.begin();
                 font.getData().setScale(1.5f);
@@ -362,7 +341,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             if (cazado) {
                 musica.stop();
                 sonidoColisionEnemigo.play(0.25f);
-                // Muestra mensaje de cazado
                 CharSequence str3 = "¡Has sido atrapado por un enemigo!";
                 sb.begin();
                 font.getData().setScale(1.5f);
@@ -373,7 +351,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             if (hundido) {
                 musica.stop();
                 sonidoColisionEnemigo.stop();
-                // Muestra mensaje de hundido
                 CharSequence str4 = "¡Te has hundido en el barco!";
                 sb.begin();
                 font.getData().setScale(1.5f);
@@ -395,6 +372,12 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         }
     }
 
+    /**
+     * Metodo KeyUp. Respuesta al soltar las teclas de movimiento del personaje
+     *
+     * @param keycode
+     * @return true
+     */
     @Override
     public boolean keyUp(int keycode) {
         jugadorArriba.setPlayMode(Animation.PlayMode.NORMAL);
@@ -404,74 +387,81 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         return true;
     }
 
+    /**
+     * Metodo KeyDown. Respuesta al pulsar las teclas de movimiento del personaje
+     *
+     * @param keycode
+     * @return true
+     */
     @Override
     public boolean keyDown(int keycode) {
-        //Si pulsamos uno de los cursores, se desplaza el sprite
-        //de forma adecuada un pixel, y se pone a cero el
-        //atributo que marca el tiempo de ejecución de la animación,
-        //provocando que la misma se reinicie.
+        // Si se pulsa uno de los cursores, se desplaza el sprite de forma adecuada un pixel
         stateTimePC = 0;
 
         actualizaPC(keycode);
 
-        //Si pulsamos la tecla del número 1, se alterna la visibilidad de la primera capa
-        //del mapa de baldosas.
+        // Si se pulsa la tecla del numero 1, se alterna la visibilidad de la primera capa del mapa de baldosas.
         if (keycode == Input.Keys.NUM_1)
             mapa.getLayers().get(0).setVisible(!mapa.getLayers().get(0).isVisible());
-        //Si pulsamos la tecla del número 2, se alterna la visibilidad de la segunda capa
-        //del mapa de baldosas.
+        // Si se pulsa la tecla del numero 2, se alterna la visibilidad de la segunda capa del mapa de baldosas.
         if (keycode == Input.Keys.NUM_2)
             mapa.getLayers().get(1).setVisible(!mapa.getLayers().get(1).isVisible());
         return true;
     }
 
+    /**
+     * Metodo KeyTyped. Recoge la tecla pulsada
+     *
+     * @param character
+     * @return false
+     */
     @Override
     public boolean keyTyped(char character) {
         return false;
     }
 
+    /**
+     * Metodo KeyUp. Respuesta al pulsar pantalla tactil
+     *
+     * @param screenX
+     * @param screenY
+     * @param pointer
+     * @param button
+     * @return true
+     */
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        // Vector en tres dimensiones que recoge las coordenadas donde se ha hecho click
-        // o toque de la pantalla.
+        // Vector en tres dimensiones que recoge las coordenadas donde se ha hecho click o toque de la pantalla.
         Vector3 clickCoordinates = new Vector3(screenX, screenY, 0);
-        // Transformamos las coordenadas del vector a coordenadas de nuestra cámara.
+        // Transforma las coordenadas del vector a coordenadas de nuestra camara.
         Vector3 posicion = camara.unproject(clickCoordinates);
 
-        //Se pone a cero el atributo que marca el tiempo de ejecución de la animación,
-        //provocando que la misma se reinicie.
         stateTimePC = 0;
 
-        //Guardamos la posición anterior del jugador por si al desplazarlo se topa
-        //con un obstáculo y podamos volverlo a la posición anterior.
+        // Guarda la posicion anterior del jugador por si topa con un obstaculo, vuelve a la posicion anterior.
         float jugadorAnteriorX = jugadorX;
         float jugadorAnteriorY = jugadorY;
 
-        //Si se ha pulsado por encima de la animación, se sube esta 5 píxeles y se reproduce la
-        //animación del jugador desplazándose hacia arriba.
+        // Si pulsa por encima de la animacion, se sube 5 pixeles y se reproduce.
         if ((jugadorY + 48) < posicion.y) {
             jugadorY += 5;
             jugador = jugadorArriba;
-            //Si se ha pulsado por debajo de la animación, se baja esta 5 píxeles y se reproduce
-            //la animación del jugador desplazándose hacia abajo.
+            // Si pulsa por debajo de la animacion, se sube 5 pixeles y se reproduce.
         } else if ((jugadorY) > posicion.y) {
             jugadorY -= 5;
             jugador = jugadorAbajo;
         }
-        //Si se ha pulsado mas de 24 a la derecha de la animación, se mueve esta 5 píxeles a la derecha y
-        //se reproduce la animación del jugador desplazándose hacia la derecha.
+        // Si pulsa mas de 24 pixels a dcha de la animacion, se sube 5 pixeles y se reproduce.
         if ((jugadorX + 24) < posicion.x) {
             jugadorX += 5;
             jugador = jugadorDerecha;
-            //Si se ha pulsado más de 24 a la izquierda de la animación, se mueve esta 5 píxeles a la
-            // izquierda y se reproduce la animación del jugador desplazándose hacia la izquierda.
+            // Si pulsa mas de 24 pixels a izqda de la animacion, se sube 5 pixeles y se reproduce.
         } else if ((jugadorX - 24) > posicion.x) {
             jugadorX -= 5;
             jugador = jugadorIzquierda;
         }
 
-        // Detectamos las colisiones con los obstáculos del mapa y si el jugador se sale del mismo.
-        // para poner al jugador en su posición anterior
+        // Detecta las colisiones con los obstaculos del mapa y si el jugador se sale del mismo.
         if ((jugadorX < 0 || jugadorY < 0 ||
                 jugadorX > (mapaAncho - anchoJugador) ||
                 jugadorY > (mapaAlto - altoJugador)) ||
@@ -485,7 +475,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             sonidoPasos.play(0.25f);
         }
 
-        //Comprobamos si hay o no colisiones entre el jugador y los obstáculos
         colisionObstaculo(jugadorAnteriorX, jugadorAnteriorY);
         colisionNPC();
         caidaAgujero();
@@ -494,26 +483,60 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         return true;
     }
 
+    /**
+     * Metodo KeyUp. Respuesta al dejar de pulsar pantalla tactil
+     *
+     * @param screenX
+     * @param screenY
+     * @param pointer
+     * @param button
+     * @return false
+     */
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         return false;
     }
 
+    /**
+     * Metodo touchDragged. Respuesta al arrastrar pantalla tactil
+     *
+     * @param screenX
+     * @param screenY
+     * @param pointer
+     * @return false
+     */
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
         return false;
     }
 
+    /**
+     * Metodo mouseMoved. Respuesta al mover raton
+     *
+     * @param screenX
+     * @param screenY
+     * @return false
+     */
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
         return false;
     }
 
+    /**
+     * Metodo mouseMoved. Respuesta al hacer scroll en pantalla
+     *
+     * @param amount
+     * @return false
+     */
     @Override
     public boolean scrolled(int amount) {
         return false;
     }
 
+    /**
+     * Metodo dispose. Libera recursos del sistema
+     *
+     */
     @Override
     public void dispose() {
         sb.dispose();
@@ -526,8 +549,13 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         sonidoColisionEnemigo.dispose();
     }
 
-    //Método que permite cambiar las coordenadas del NPC en la posición "i",
-    //dada una variación "delta" en ambas coordenadas.
+    /**
+     * Metodo actualizaNPC. Metodo que permite cambiar las coordenadas del NPC en la posicion "i",
+     * dada una variacion "delta" en ambas coordenadas.
+     *
+     * @param i
+     * @param delta
+     */
     private void actualizaNPC(int i, float delta) {
         if (destinoY[i] > noJugadorY[i]) {
             noJugadorY[i] += delta;
@@ -547,9 +575,12 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         }
     }
 
+    /**
+     * Metodo actualizaPC. Metodo que actualiza posicion del jugador
+     *
+     * @param keycode
+     */
     private void actualizaPC(int keycode) {
-        //Guardamos la posición anterior del jugador por si al desplazarlo se topa
-        //con un obstáculo y podamos volverlo a la posición anterior.
         float jugadorAnteriorX = jugadorX;
         float jugadorAnteriorY = jugadorY;
 
@@ -574,38 +605,35 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             jugador = jugadorAbajo;
             jugadorAbajo.setPlayMode(Animation.PlayMode.LOOP);
         }
-        //Comprobamos si hay o no colisiones entre el jugador y los obstáculos
         colisionObstaculo(jugadorAnteriorX, jugadorAnteriorY);
         colisionNPC();
         caidaAgujero();
         caidaBarco();
     }
 
+    /**
+     * Metodo colisionNPC. Comprueba colision con enemigos
+     *
+     */
     private void colisionNPC() {
-        //Vamos a comprobar que el rectángulo que rodea al jugador, no se solape
-        //con el rectángulo de alguno de los NPC. Primero calculamos el rectángulo
-        //en torno al jugador.
+        // Calcula el rectangulo en torno al jugador.
         Rectangle rJugador = new Rectangle(jugadorX, jugadorY, anchoJugador, altoJugador);
         Rectangle rNPC;
-        //Ahora recorremos el array de NPC, para cada uno generamos su rectángulo envolvente
-        //y comprobamos si se solapa o no con el del Jugador.
+        // Recorre el array de NPC, para cada uno genera su rectangulo envolvente y comprueba si hay solape.
         for (int i = 0; i < numeroNPCs; i++) {
             rNPC = new Rectangle(noJugadorX[i], noJugadorY[i], anchoNoJugador, altoNoJugador);
-            //Se comprueba si se solapan.
             if (rJugador.overlaps(rNPC)) {
-                //hacer lo que haya que hacer en este caso, como puede ser reproducir un efecto
-                //de sonido, una animación del jugador alternativa y, posiblemente, que este muera
-                //y se acabe la partida actual. En principio, en este caso, lo único que se hace
-                //es mostrar un mensaje en la consola de texto.
                 System.out.println("¡Has sido atrapado!");
                 cazado = true;
             }
         }
     }
 
+    /**
+     * Metodo colisionObstaculo. Comprueba colision con obstaculos
+     *
+     */
     private void colisionObstaculo(float jugadorAnteriorX, float jugadorAnteriorY) {
-        // Detectamos las colisiones con los obstáculos del mapa y si el jugador se sale del mismo.
-        // para poner al jugador en su posición anterior
         if ((jugadorX < 0 || jugadorY < 0 ||
                 jugadorX > (mapaAncho - anchoJugador) ||
                 jugadorY > (mapaAlto - altoJugador)) ||
@@ -619,8 +647,11 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         }
     }
 
+    /**
+     * Metodo caidaAgujero. Comprueba caidas en agujeros
+     *
+     */
     private void caidaAgujero() {
-        // Detectamos las caídas en los agujeros del mapa.
         if ((jugadorX < 0 || jugadorY < 0 ||
                 jugadorX > (mapaAncho - anchoJugador) ||
                 jugadorY > (mapaAlto - altoJugador)) ||
@@ -633,8 +664,11 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         }
     }
 
+    /**
+     * Metodo caidaBarco. Comprueba si personaje se sube al barco
+     *
+     */
     private void caidaBarco() {
-        // Detectamos si se sube al barco y este se hunde.
         if ((jugadorX < 0 || jugadorY < 0 ||
                 jugadorX > (mapaAncho - anchoJugador) ||
                 jugadorY > (mapaAlto - altoJugador)) ||
