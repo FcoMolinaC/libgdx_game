@@ -23,6 +23,10 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 
 public class castle_game extends ApplicationAdapter implements InputProcessor {
+    private static final int FRAME_COLS = 4;
+    private static final int FRAME_ROWS = 4;
+    // Numero de NPC que aparecen en el juego
+    private static final int numeroNPCs = 5;
     // Objeto que recoge el mapa de baldosas
     private TiledMap mapa;
     // Objeto con el que se pinta el mapa de baldosas
@@ -33,10 +37,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     private Texture img;
     // Atributo que permite dibujar imagenes 2D, en este caso el sprite.
     private SpriteBatch sb;
-
-    private static final int FRAME_COLS = 4;
-    private static final int FRAME_ROWS = 4;
-
     // Animacion que se muestra en el metodo render()
     private Animation jugador;
     // Animaciones para cada una de las direcciones de movimiento del personaje del jugador.
@@ -47,41 +47,49 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     // Tamano del mapa de baldosas.
     private int mapaAncho, mapaAlto;
     // Atributos que indican la anchura y la altura de un tile del mapa de baldosas
-    int anchoCelda, altoCelda;
+    private int anchoCelda, altoCelda;
     // Posicion actual del jugador.
     private float jugadorX, jugadorY;
     // Este atributo indica el tiempo en segundos transcurridos desde que se inicia la animacion
     private float stateTimePC;
-
     // Frame que se va a mostrar en cada momento.
     private TextureRegion cuadroActual;
-
     private boolean[][] obstaculo, agujero, barco;
     private TiledMapTileLayer capaObstaculos, capaAgujeros, capaBarco;
-
     // Atributos que indican la anchura y altura del sprite animado del jugador.
-    int anchoJugador, altoJugador;
-
+    private int anchoJugador, altoJugador;
     // Animaciones posicionales relacionadas con los NPC del juego
     private Animation noJugadorArriba;
     private Animation noJugadorDerecha;
     private Animation noJugadorAbajo;
     private Animation noJugadorIzquierda;
-
     // Array con los objetos Animation de los NPC
     private Animation[] noJugador;
     // Atributos que indican la anchura y altura del sprite animado de los NPC.
-    int anchoNoJugador, altoNoJugador;
+    private int anchoNoJugador, altoNoJugador;
     // Posiciones iniciales de cada uno de los NPC
     private float[] noJugadorX;
     private float[] noJugadorY;
     // Posiciones finales de cada uno de los NPC
     private float[] destinoX;
     private float[] destinoY;
-    // Numero de NPC que aparecen en el juego
-    private static final int numeroNPCs = 5;
     // Atributo que indica el tiempo en segundos transcurridos desde que se inicia la animacion
     private float stateTimeNPC = 0;
+
+    // Animacion de los tesoros que se muestra en el metodo render()
+    private Animation tesoro;
+
+    // Posicion actual de los tesoros.
+    private float tesoro1X, tesoro1Y, tesoro2X, tesoro2Y, tesoro3X, tesoro3Y, tesoro4X, tesoro4Y;
+
+    // Atributos que indican la anchura y altura del sprite de los tesoros
+    private int anchoTesoro, altoTesoro;
+
+    // Atributo que indica el tiempo en segundos transcurridos desde que se inicia la animacion
+    private float stateTimeTesoro = 0;
+
+    private int conseguidos = 0;
+    private int restantes = 4;
 
     // Musica de fondo del juego
     private Music musica;
@@ -92,12 +100,13 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     private Sound sonidoObstaculo;
     private Sound sonidoCaida;
     private Sound sonidoBarco;
+    private Sound sonidoVictoria;
 
     // Booleanos para fin de juego
-    private boolean caida, cazado, hundido;
+    private boolean caida, cazado, hundido, victoria;
 
     // Objeto font para mensajes en pantalla
-    private BitmapFont font;
+    private BitmapFont font, tesoros;
 
     /**
      * Metodo create. Carga y crea objetos y atributos del juego
@@ -247,6 +256,35 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
 
         stateTimeNPC = 0f;
 
+        // Carga la imagen de los frames del jugagor en el objeto img de la clase Texture.
+        img = new Texture(Gdx.files.internal("mapa/tesoro.png"));
+
+        // Sacamos los frames de img en un array de TextureRegion.
+        tmp = TextureRegion.split(img, img.getWidth(), img.getHeight());
+
+        tesoro1X = 30;
+        tesoro1Y = 415;
+
+        tesoro2X = 30;
+        tesoro2Y = 190;
+
+        tesoro3X = 540;
+        tesoro3Y = 415;
+
+        tesoro4X = 605;
+        tesoro4Y = 0;
+        //Pone a cero el atributo stateTime, que marca el tiempo de ejecucion de la animacion.
+        stateTimeTesoro = 0f;
+
+        tesoro = new Animation(0f, tmp[0]);
+
+        // Carga en los atributos del ancho y alto del sprite sus valores
+        cuadroActual = (TextureRegion) tesoro.getKeyFrame(stateTimeTesoro);
+        anchoTesoro = (cuadroActual.getRegionWidth() / 2)/2;//ajustamos las colisiones H
+        altoTesoro = (cuadroActual.getRegionHeight())/2;
+
+        tesoros = new BitmapFont();
+
         // Inicializa la musica de fondo del juego.
         musica = Gdx.audio.newMusic(Gdx.files.internal("sonidos/main.mp3"));
         musica.play();
@@ -257,6 +295,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         sonidoObstaculo = Gdx.audio.newSound(Gdx.files.internal("sonidos/wall.ogg"));
         sonidoCaida = Gdx.audio.newSound(Gdx.files.internal("sonidos/fall.ogg"));
         sonidoBarco = Gdx.audio.newSound(Gdx.files.internal("sonidos/boat.ogg"));
+        sonidoVictoria = Gdx.audio.newSound(Gdx.files.internal("sonidos/win.ogg"));
     }
 
     /**
@@ -280,8 +319,8 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         camara.update();
         mapaRenderer.setView(camara);
 
-        // Dibuja las seis primeras capas del TiledMap (no incluye a la de altura).
-        int[] capas = {0, 1, 2, 3, 4, 5};
+        // Dibuja las cinco primeras capas del TiledMap (no incluye a la de altura).
+        int[] capas = {0, 1, 2, 3, 4};
         mapaRenderer.render(capas);
 
         // Extrae el tiempo de la ultima actualizacion del sprite y la acumula a stateTime.
@@ -290,9 +329,18 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         cuadroActual = (TextureRegion) jugador.getKeyFrame(stateTimePC);
         sb.setProjectionMatrix(camara.combined);
 
+        /*if (cogeTesoro()) {
+            CharSequence str = "¡Has conseguido un tesoro! te quedan " + restantes;
+            sb.begin();
+            tesoros.getData().setScale(1f);
+            tesoros.setColor(Color.WHITE);
+            tesoros.draw(sb, str, 50, 30);
+            sb.end();
+        }*/
+
         sb.begin();
 
-        if (!cazado && !caida && !hundido) {
+        if (!cazado && !caida && !hundido && !victoria) {
             // Pinta el objeto Sprite a traves del objeto SpriteBatch
             sb.draw(cuadroActual, jugadorX, jugadorY);
             if (Gdx.input.isKeyPressed(Input.Keys.UP))
@@ -310,10 +358,18 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 cuadroActual = (TextureRegion) noJugador[i].getKeyFrame(stateTimeNPC);
                 sb.draw(cuadroActual, noJugadorX[i], noJugadorY[i]);
             }
+
+            cuadroActual = (TextureRegion) tesoro.getKeyFrame(stateTimeTesoro);
+            sb.draw(cuadroActual, tesoro1X, tesoro1Y);
+            sb.draw(cuadroActual, tesoro2X, tesoro2Y);
+            sb.draw(cuadroActual, tesoro3X, tesoro3Y);
+            sb.draw(cuadroActual, tesoro4X, tesoro4Y);
+
             sb.end();
-            // Pinta la septima capa del mapa de baldosas.
+
+            // Pinta la sexta capa del mapa de baldosas.
             capas = new int[1];
-            capas[0] = 6;
+            capas[0] = 5;
             mapaRenderer.render(capas);
         } else {
             // Pinta la pantalla en negro y desactiva los sonidos
@@ -335,7 +391,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 sb.begin();
                 font.getData().setScale(1.5f);
                 font.setColor(Color.RED);
-                font.draw(sb, str2, (camara.viewportWidth / 2f) - 100f, (camara.viewportHeight / 2f) + 10f);
+                font.draw(sb, str2, (camara.viewportWidth / 2f) - 100f, (camara.viewportHeight / 2f) + 7f);
                 sb.end();
             }
             if (cazado) {
@@ -345,7 +401,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 sb.begin();
                 font.getData().setScale(1.5f);
                 font.setColor(Color.RED);
-                font.draw(sb, str3, (camara.viewportWidth / 2f) - 150f, (camara.viewportHeight / 2f) + 10f);
+                font.draw(sb, str3, (camara.viewportWidth / 2f) - 150f, (camara.viewportHeight / 2f) + 7f);
                 sb.end();
             }
             if (hundido) {
@@ -355,7 +411,18 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 sb.begin();
                 font.getData().setScale(1.5f);
                 font.setColor(Color.RED);
-                font.draw(sb, str4, (camara.viewportWidth / 2f) - 125f, (camara.viewportHeight / 2f) + 10f);
+                font.draw(sb, str4, (camara.viewportWidth / 2f) - 125f, (camara.viewportHeight / 2f) + 7f);
+                sb.end();
+            }
+            if (victoria) {
+                musica.stop();
+                sonidoColisionEnemigo.stop();
+                sonidoVictoria.play(0.5f);
+                CharSequence str5 = "¡HAS GANADO!";
+                sb.begin();
+                font.getData().setScale(2.5f);
+                font.setColor(Color.GREEN);
+                font.draw(sb, str5, (camara.viewportWidth / 2f) - 120f, (camara.viewportHeight / 2f) + 5f);
                 sb.end();
             }
             // Espera 3 segundos y cierra el juego
@@ -535,7 +602,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
 
     /**
      * Metodo dispose. Libera recursos del sistema
-     *
      */
     @Override
     public void dispose() {
@@ -584,6 +650,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         float jugadorAnteriorX = jugadorX;
         float jugadorAnteriorY = jugadorY;
 
+
         int speed = 2;
         if (keycode == Input.Keys.LEFT) {
             jugadorX += -speed;
@@ -609,11 +676,20 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         colisionNPC();
         caidaAgujero();
         caidaBarco();
+
+        if (conseguidos < 4) {
+            if (cogeTesoro()) {
+                conseguidos++;
+                restantes--;
+                System.out.println("¡Has conseguido un tesoro! te quedan " + restantes);
+            }
+        } else {
+            victoria = true;
+        }
     }
 
     /**
      * Metodo colisionNPC. Comprueba colision con enemigos
-     *
      */
     private void colisionNPC() {
         // Calcula el rectangulo en torno al jugador.
@@ -631,7 +707,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
 
     /**
      * Metodo colisionObstaculo. Comprueba colision con obstaculos
-     *
      */
     private void colisionObstaculo(float jugadorAnteriorX, float jugadorAnteriorY) {
         if ((jugadorX < 0 || jugadorY < 0 ||
@@ -649,7 +724,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
 
     /**
      * Metodo caidaAgujero. Comprueba caidas en agujeros
-     *
      */
     private void caidaAgujero() {
         if ((jugadorX < 0 || jugadorY < 0 ||
@@ -666,7 +740,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
 
     /**
      * Metodo caidaBarco. Comprueba si personaje se sube al barco
-     *
      */
     private void caidaBarco() {
         if ((jugadorX < 0 || jugadorY < 0 ||
@@ -679,5 +752,44 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         } else {
             sonidoPasos.play(0.25f);
         }
+    }
+
+    /**
+     * Metodo cogeTesoro. Comprueba solape con sprite de tesoros
+     */
+    private boolean cogeTesoro() {
+        // Calcula el rectangulo en torno al jugador.
+        Rectangle rJugador = new Rectangle(jugadorX, jugadorY, anchoJugador, altoJugador);
+        Rectangle tesoro1, tesoro2, tesoro3, tesoro4;
+
+        // Recorre el array de NPC, para cada uno genera su rectangulo envolvente y comprueba si hay solape.
+        tesoro1 = new Rectangle(tesoro1X, tesoro1Y, anchoTesoro, altoTesoro);
+        tesoro2 = new Rectangle(tesoro2X, tesoro2Y, anchoTesoro, altoTesoro);
+        tesoro3 = new Rectangle(tesoro3X, tesoro3Y, anchoTesoro, altoTesoro);
+        tesoro4 = new Rectangle(tesoro4X, tesoro4Y, anchoTesoro, altoTesoro);
+
+        if (rJugador.overlaps(tesoro1)) {
+            //tesoro1X = 420;
+            //tesoro1Y = 320;
+            tesoro1X = 30;
+            tesoro1Y = 0;
+            return true;
+        }
+        if (rJugador.overlaps(tesoro2)) {
+            tesoro2X = 60;
+            tesoro2Y = 0;
+            return true;
+        }
+        if (rJugador.overlaps(tesoro3)) {
+            tesoro3X = 90;
+            tesoro3Y = 0;
+            return true;
+        }
+        if (rJugador.overlaps(tesoro4)) {
+            tesoro4X = 120;
+            tesoro4Y = 0;
+            return true;
+        }
+        return false;
     }
 }
