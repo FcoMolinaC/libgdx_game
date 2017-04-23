@@ -280,8 +280,8 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
 
         // Carga en los atributos del ancho y alto del sprite sus valores
         cuadroActual = (TextureRegion) tesoro.getKeyFrame(stateTimeTesoro);
-        anchoTesoro = (cuadroActual.getRegionWidth() / 2)/2;//ajustamos las colisiones H
-        altoTesoro = (cuadroActual.getRegionHeight())/2;
+        anchoTesoro = (cuadroActual.getRegionWidth() / 2) / 2;//ajustamos las colisiones H
+        altoTesoro = (cuadroActual.getRegionHeight()) / 2;
 
         tesoros = new BitmapFont();
 
@@ -329,14 +329,14 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         cuadroActual = (TextureRegion) jugador.getKeyFrame(stateTimePC);
         sb.setProjectionMatrix(camara.combined);
 
-        /*if (cogeTesoro()) {
+        if (cogeTesoro()) {
             CharSequence str = "¡Has conseguido un tesoro! te quedan " + restantes;
             sb.begin();
             tesoros.getData().setScale(1f);
             tesoros.setColor(Color.WHITE);
             tesoros.draw(sb, str, 50, 30);
             sb.end();
-        }*/
+        }
 
         sb.begin();
 
@@ -623,19 +623,36 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
      * @param delta
      */
     private void actualizaNPC(int i, float delta) {
-        if (destinoY[i] > noJugadorY[i]) {
+        // Animacion vetical.
+        if (((noJugadorY[i] + delta > destinoY[i]) && (destinoY[i] > noJugadorY[i]))
+                || (noJugadorY[i] - delta < destinoY[i]) && (destinoY[i] < noJugadorY[i])) {
+            destinoY[i] = (float) (Math.random() * mapaAlto);
+            if (noJugadorY[i] < destinoY[i]) {
+                noJugador[i] = noJugadorArriba;
+            } else {
+                noJugador[i] = noJugadorAbajo;
+            }
+        } else if (destinoY[i] > noJugadorY[i]) {
             noJugadorY[i] += delta;
             noJugador[i] = noJugadorArriba;
-        }
-        if (destinoY[i] < noJugadorY[i]) {
+        } else if (destinoY[i] < noJugadorY[i]) {
             noJugadorY[i] -= delta;
             noJugador[i] = noJugadorAbajo;
         }
-        if (destinoX[i] > noJugadorX[i]) {
+
+        // Animacion horizontal.
+        if (((noJugadorX[i] + delta > destinoX[i]) && (destinoX[i] > noJugadorX[i]))
+                || (noJugadorX[i] - delta < destinoX[i]) && (destinoX[i] < noJugadorX[i])) {
+            destinoX[i] = (float) (Math.random() * mapaAncho);
+            if (noJugadorX[i] < destinoX[i]) {
+                noJugador[i] = noJugadorDerecha;
+            } else {
+                noJugador[i] = noJugadorIzquierda;
+            }
+        } else if (destinoX[i] > noJugadorX[i]) {
             noJugadorX[i] += delta;
             noJugador[i] = noJugadorDerecha;
-        }
-        if (destinoX[i] < noJugadorX[i]) {
+        } else if (destinoX[i] < noJugadorX[i]) {
             noJugadorX[i] -= delta;
             noJugador[i] = noJugadorIzquierda;
         }
