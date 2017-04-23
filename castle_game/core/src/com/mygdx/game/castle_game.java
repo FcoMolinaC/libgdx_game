@@ -25,6 +25,8 @@ import com.badlogic.gdx.math.Vector3;
 public class castle_game extends ApplicationAdapter implements InputProcessor {
     private static final int FRAME_COLS = 4;
     private static final int FRAME_ROWS = 4;
+    private static final int FRAME_COLSnPC = 3;
+    private static final int FRAME_ROWSnPC = 4;
     // Numero de NPC que aparecen en el juego
     private static final int numeroNPCs = 5;
     // Objeto que recoge el mapa de baldosas
@@ -211,7 +213,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         img = new Texture(Gdx.files.internal("jugadores/enemigo.png"));
 
         // Sacamos los frames de img en un array de TextureRegion.
-        tmp = TextureRegion.split(img, img.getWidth() / FRAME_COLS, img.getHeight() / FRAME_ROWS);
+        tmp = TextureRegion.split(img, img.getWidth() / FRAME_COLSnPC, img.getHeight() / FRAME_ROWSnPC);
 
         // Crea las distintas animaciones
         noJugadorArriba = new Animation(0.150f, tmp[3]);//0
@@ -262,6 +264,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         // Sacamos los frames de img en un array de TextureRegion.
         tmp = TextureRegion.split(img, img.getWidth(), img.getHeight());
 
+        // Posicion inicial de los tesoros
         tesoro1X = 30;
         tesoro1Y = 415;
 
@@ -273,9 +276,9 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
 
         tesoro4X = 605;
         tesoro4Y = 0;
+
         //Pone a cero el atributo stateTime, que marca el tiempo de ejecucion de la animacion.
         stateTimeTesoro = 0f;
-
         tesoro = new Animation(0f, tmp[0]);
 
         // Carga en los atributos del ancho y alto del sprite sus valores
@@ -329,14 +332,14 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         cuadroActual = (TextureRegion) jugador.getKeyFrame(stateTimePC);
         sb.setProjectionMatrix(camara.combined);
 
-        if (cogeTesoro()) {
+/*        if (cogeTesoro()) {
             CharSequence str = "¡Has conseguido un tesoro! te quedan " + restantes;
             sb.begin();
             tesoros.getData().setScale(1f);
             tesoros.setColor(Color.WHITE);
             tesoros.draw(sb, str, 50, 30);
             sb.end();
-        }
+        }*/
 
         sb.begin();
 
@@ -541,7 +544,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         } else {
             sonidoPasos.play(0.25f);
         }
-
         colisionObstaculo(jugadorAnteriorX, jugadorAnteriorY);
         colisionNPC();
         caidaAgujero();
@@ -624,37 +626,13 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
      */
     private void actualizaNPC(int i, float delta) {
         // Animacion vetical.
-        if (((noJugadorY[i] + delta > destinoY[i]) && (destinoY[i] > noJugadorY[i]))
-                || (noJugadorY[i] - delta < destinoY[i]) && (destinoY[i] < noJugadorY[i])) {
-            destinoY[i] = (float) (Math.random() * mapaAlto);
-            if (noJugadorY[i] < destinoY[i]) {
-                noJugador[i] = noJugadorArriba;
-            } else {
-                noJugador[i] = noJugadorAbajo;
-            }
-        } else if (destinoY[i] > noJugadorY[i]) {
-            noJugadorY[i] += delta;
-            noJugador[i] = noJugadorArriba;
-        } else if (destinoY[i] < noJugadorY[i]) {
-            noJugadorY[i] -= delta;
-            noJugador[i] = noJugadorAbajo;
-        }
-
-        // Animacion horizontal.
-        if (((noJugadorX[i] + delta > destinoX[i]) && (destinoX[i] > noJugadorX[i]))
-                || (noJugadorX[i] - delta < destinoX[i]) && (destinoX[i] < noJugadorX[i])) {
-            destinoX[i] = (float) (Math.random() * mapaAncho);
-            if (noJugadorX[i] < destinoX[i]) {
-                noJugador[i] = noJugadorDerecha;
-            } else {
-                noJugador[i] = noJugadorIzquierda;
-            }
-        } else if (destinoX[i] > noJugadorX[i]) {
-            noJugadorX[i] += delta;
-            noJugador[i] = noJugadorDerecha;
-        } else if (destinoX[i] < noJugadorX[i]) {
-            noJugadorX[i] -= delta;
-            noJugador[i] = noJugadorIzquierda;
+        if (!vistoNPC()) {
+            movimientoNPC(i, delta);
+        } else {
+            System.out.println("¡Te han visto!");
+            destinoX[i] = jugadorX;
+            destinoY[i] = jugadorY;
+            movimientoNPC(i, delta);
         }
     }
 
@@ -723,6 +701,58 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     }
 
     /**
+     * Metodo colisionNPC. Comprueba colision con enemigos
+     */
+    private boolean vistoNPC() {
+        // Calcula el rectangulo en torno al jugador.
+        Rectangle rJugador = new Rectangle(jugadorX, jugadorY, 150, 150);
+        Rectangle rNPC;
+        // Recorre el array de NPC, para cada uno genera su rectangulo envolvente y comprueba si hay solape.
+        for (int i = 0; i < numeroNPCs; i++) {
+            rNPC = new Rectangle(noJugadorX[i], noJugadorY[i], anchoNoJugador, altoNoJugador);
+            if (rJugador.overlaps(rNPC)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void movimientoNPC(int i, float delta) {
+        // Animacion vertical.
+        if (((noJugadorY[i] + delta > destinoY[i]) && (destinoY[i] > noJugadorY[i]))
+                || (noJugadorY[i] - delta < destinoY[i]) && (destinoY[i] < noJugadorY[i])) {
+            destinoY[i] = (float) (Math.random() * mapaAlto);
+            if (noJugadorY[i] < destinoY[i]) {
+                noJugador[i] = noJugadorArriba;
+            } else {
+                noJugador[i] = noJugadorAbajo;
+            }
+        } else if (destinoY[i] > noJugadorY[i]) {
+            noJugadorY[i] += delta;
+            noJugador[i] = noJugadorArriba;
+        } else if (destinoY[i] < noJugadorY[i]) {
+            noJugadorY[i] -= delta;
+            noJugador[i] = noJugadorAbajo;
+        }
+        // Animacion horizontal.
+        if (((noJugadorX[i] + delta > destinoX[i]) && (destinoX[i] > noJugadorX[i]))
+                || (noJugadorX[i] - delta < destinoX[i]) && (destinoX[i] < noJugadorX[i])) {
+            destinoX[i] = (float) (Math.random() * mapaAncho);
+            if (noJugadorX[i] < destinoX[i]) {
+                noJugador[i] = noJugadorDerecha;
+            } else {
+                noJugador[i] = noJugadorIzquierda;
+            }
+        } else if (destinoX[i] > noJugadorX[i]) {
+            noJugadorX[i] += delta;
+            noJugador[i] = noJugadorDerecha;
+        } else if (destinoX[i] < noJugadorX[i]) {
+            noJugadorX[i] -= delta;
+            noJugador[i] = noJugadorIzquierda;
+        }
+    }
+
+    /**
      * Metodo colisionObstaculo. Comprueba colision con obstaculos
      */
     private void colisionObstaculo(float jugadorAnteriorX, float jugadorAnteriorY) {
@@ -786,8 +816,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         tesoro4 = new Rectangle(tesoro4X, tesoro4Y, anchoTesoro, altoTesoro);
 
         if (rJugador.overlaps(tesoro1)) {
-            //tesoro1X = 420;
-            //tesoro1Y = 320;
             tesoro1X = 30;
             tesoro1Y = 0;
             return true;
