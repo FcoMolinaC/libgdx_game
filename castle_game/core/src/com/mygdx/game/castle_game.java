@@ -28,7 +28,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     private static final int FRAME_COLSnPC = 3;
     private static final int FRAME_ROWSnPC = 4;
     // Numero de NPC que aparecen en el juego
-    private static final int numeroNPCs = 5;
+    private static final int numeroNPCs = 2;
     // Objeto que recoge el mapa de baldosas
     private TiledMap mapa;
     // Objeto con el que se pinta el mapa de baldosas
@@ -36,7 +36,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     // Camara que nos da la vista del juego
     private OrthographicCamera camara;
     // Atributo en el que se cargara la hoja de sprites del personaje.
-    private Texture img;
+    private Texture img, img2;
     // Atributo que permite dibujar imagenes 2D, en este caso el sprite.
     private SpriteBatch sb;
     // Animacion que se muestra en el metodo render()
@@ -61,17 +61,28 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     // Atributos que indican la anchura y altura del sprite animado del jugador.
     private int anchoJugador, altoJugador;
     // Animaciones posicionales relacionadas con los NPC del juego
-    private Animation noJugadorArriba;
-    private Animation noJugadorDerecha;
-    private Animation noJugadorAbajo;
-    private Animation noJugadorIzquierda;
+    private Animation enemigoArriba;
+    private Animation enemigoDerecha;
+    private Animation enemigoAbajo;
+    private Animation enemigoIzquierda;
+    // Animaciones posicionales relacionadas con los NPC del juego
+    private Animation enemigoRojoArriba;
+    private Animation enemigoRojoDerecha;
+    private Animation enemigoRojoAbajo;
+    private Animation enemigoRojoIzquierda;
+
+    private Animation tempArriba = enemigoArriba;
+    private Animation tempAbajo = enemigoAbajo;
+    private Animation tempIzquierda = enemigoIzquierda;
+    private Animation tempDerecha = enemigoDerecha;
+
     // Array con los objetos Animation de los NPC
-    private Animation[] noJugador;
+    private Animation[] enemigo;
     // Atributos que indican la anchura y altura del sprite animado de los NPC.
-    private int anchoNoJugador, altoNoJugador;
+    private int anchoEnemigo, altoEnemigo;
     // Posiciones iniciales de cada uno de los NPC
-    private float[] noJugadorX;
-    private float[] noJugadorY;
+    private float[] enemigoX;
+    private float[] enemigoY;
     // Posiciones finales de cada uno de los NPC
     private float[] destinoX;
     private float[] destinoY;
@@ -202,9 +213,9 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         altoJugador = cuadroActual.getRegionHeight();
 
         // Inicializa el apartado referente a los NPC
-        noJugador = new Animation[numeroNPCs];
-        noJugadorX = new float[numeroNPCs];
-        noJugadorY = new float[numeroNPCs];
+        enemigo = new Animation[numeroNPCs];
+        enemigoX = new float[numeroNPCs];
+        enemigoY = new float[numeroNPCs];
         destinoX = new float[numeroNPCs];
         destinoY = new float[numeroNPCs];
 
@@ -216,42 +227,64 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         tmp = TextureRegion.split(img, img.getWidth() / FRAME_COLSnPC, img.getHeight() / FRAME_ROWSnPC);
 
         // Crea las distintas animaciones
-        noJugadorArriba = new Animation(0.150f, tmp[3]);//0
-        noJugadorArriba.setPlayMode(Animation.PlayMode.LOOP);
-        noJugadorDerecha = new Animation(0.150f, tmp[2]);//1
-        noJugadorDerecha.setPlayMode(Animation.PlayMode.LOOP);
-        noJugadorAbajo = new Animation(0.150f, tmp[0]);//2
-        noJugadorAbajo.setPlayMode(Animation.PlayMode.LOOP);
-        noJugadorIzquierda = new Animation(0.150f, tmp[1]);//3
-        noJugadorIzquierda.setPlayMode(Animation.PlayMode.LOOP);
+        enemigoArriba = new Animation(0.150f, tmp[3]);//0
+        enemigoArriba.setPlayMode(Animation.PlayMode.LOOP);
+        enemigoDerecha = new Animation(0.150f, tmp[2]);//1
+        enemigoDerecha.setPlayMode(Animation.PlayMode.LOOP);
+        enemigoAbajo = new Animation(0.150f, tmp[0]);//2
+        enemigoAbajo.setPlayMode(Animation.PlayMode.LOOP);
+        enemigoIzquierda = new Animation(0.150f, tmp[1]);//3
+        enemigoIzquierda.setPlayMode(Animation.PlayMode.LOOP);
+
+        tempArriba = enemigoArriba;
+        tempAbajo = enemigoAbajo;
+        tempIzquierda = enemigoIzquierda;
+        tempDerecha = enemigoDerecha;
+
+        // Crea las animaciones posicionales de los NPC en modo persecucion
+        // Carga la imagen de los frames del enemigo en el objeto img de la clase Texture.
+        img2 = new Texture(Gdx.files.internal("jugadores/enemigo2.png"));
+
+        // Sacamos los frames de img2 en un array de TextureRegion.
+        tmp = TextureRegion.split(img2, img2.getWidth() / FRAME_COLSnPC, img2.getHeight() / FRAME_ROWSnPC);
+
+        // Crea las distintas animaciones
+        enemigoRojoArriba = new Animation(0.150f, tmp[3]);//0
+        enemigoRojoArriba.setPlayMode(Animation.PlayMode.LOOP);
+        enemigoRojoDerecha = new Animation(0.150f, tmp[2]);//1
+        enemigoRojoDerecha.setPlayMode(Animation.PlayMode.LOOP);
+        enemigoRojoAbajo = new Animation(0.150f, tmp[0]);//2
+        enemigoRojoAbajo.setPlayMode(Animation.PlayMode.LOOP);
+        enemigoRojoIzquierda = new Animation(0.150f, tmp[1]);//3
+        enemigoRojoIzquierda.setPlayMode(Animation.PlayMode.LOOP);
 
         // Carga en los atributos del ancho y alto del sprite del enemigo sus valores
-        cuadroActual = (TextureRegion) noJugadorAbajo.getKeyFrame(stateTimeNPC);
-        anchoNoJugador = cuadroActual.getRegionWidth() / 2;
-        altoNoJugador = cuadroActual.getRegionHeight();
+        cuadroActual = (TextureRegion) enemigoAbajo.getKeyFrame(stateTimeNPC);
+        anchoEnemigo = cuadroActual.getRegionWidth() / 2;
+        altoEnemigo = cuadroActual.getRegionHeight();
 
         // Se inicializan, la animacion por defecto y, de forma aleatoria, las posiciones iniciales y finales de los NPC
         for (int i = 0; i < numeroNPCs; i++) {
-            noJugadorX[i] = (float) (Math.random() * mapaAncho);
-            noJugadorY[i] = (float) (Math.random() * mapaAlto);
+            enemigoX[i] = (float) (Math.random() * mapaAncho);
+            enemigoY[i] = (float) (Math.random() * mapaAlto);
 
             if (i % 2 == 0) {
                 // NPC par => mover de forma vertical
-                destinoX[i] = noJugadorX[i];
+                destinoX[i] = enemigoX[i];
                 destinoY[i] = (float) (Math.random() * mapaAlto);
-                if (noJugadorY[i] < destinoY[i]) {
-                    noJugador[i] = noJugadorArriba;
+                if (enemigoY[i] < destinoY[i]) {
+                    enemigo[i] = enemigoArriba;
                 } else {
-                    noJugador[i] = noJugadorAbajo;
+                    enemigo[i] = enemigoAbajo;
                 }
             } else {
                 // NPC impar => mover de forma horizontal
                 destinoX[i] = (float) (Math.random() * mapaAncho);
-                destinoY[i] = noJugadorY[i];
-                if (noJugadorX[i] < destinoX[i]) {
-                    noJugador[i] = noJugadorDerecha;
+                destinoY[i] = enemigoY[i];
+                if (enemigoX[i] < destinoX[i]) {
+                    enemigo[i] = enemigoDerecha;
                 } else {
-                    noJugador[i] = noJugadorIzquierda;
+                    enemigo[i] = enemigoIzquierda;
                 }
             }
         }
@@ -358,8 +391,8 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             // Dibuja las animaciones de los NPC
             for (int i = 0; i < numeroNPCs; i++) {
                 actualizaNPC(i, 0.5f);
-                cuadroActual = (TextureRegion) noJugador[i].getKeyFrame(stateTimeNPC);
-                sb.draw(cuadroActual, noJugadorX[i], noJugadorY[i]);
+                cuadroActual = (TextureRegion) enemigo[i].getKeyFrame(stateTimeNPC);
+                sb.draw(cuadroActual, enemigoX[i], enemigoY[i]);
             }
 
             cuadroActual = (TextureRegion) tesoro.getKeyFrame(stateTimeTesoro);
@@ -625,15 +658,25 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
      * @param delta
      */
     private void actualizaNPC(int i, float delta) {
+
         // Animacion vetical.
-        if (!vistoNPC()) {
-            movimientoNPC(i, delta);
-        } else {
+        if (vistoNPC()) {
             System.out.println("¡Te han visto!");
+            //  Cambia animaciones a enemigo2 (rojo)
+            enemigoArriba = enemigoRojoArriba;
+            enemigoAbajo = enemigoRojoAbajo;
+            enemigoIzquierda = enemigoRojoIzquierda;
+            enemigoDerecha = enemigoRojoDerecha;
             destinoX[i] = jugadorX;
             destinoY[i] = jugadorY;
-            movimientoNPC(i, delta);
+        } else {
+            System.out.println("No te ve");
+            enemigoArriba = tempArriba;
+            enemigoAbajo = tempAbajo;
+            enemigoIzquierda = tempIzquierda;
+            enemigoDerecha = tempDerecha;
         }
+        movimientoNPC(i, delta);
     }
 
     /**
@@ -692,7 +735,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         Rectangle rNPC;
         // Recorre el array de NPC, para cada uno genera su rectangulo envolvente y comprueba si hay solape.
         for (int i = 0; i < numeroNPCs; i++) {
-            rNPC = new Rectangle(noJugadorX[i], noJugadorY[i], anchoNoJugador, altoNoJugador);
+            rNPC = new Rectangle(enemigoX[i], enemigoY[i], anchoEnemigo, altoEnemigo);
             if (rJugador.overlaps(rNPC)) {
                 System.out.println("¡Has sido atrapado!");
                 cazado = true;
@@ -709,7 +752,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         Rectangle rNPC;
         // Recorre el array de NPC, para cada uno genera su rectangulo envolvente y comprueba si hay solape.
         for (int i = 0; i < numeroNPCs; i++) {
-            rNPC = new Rectangle(noJugadorX[i], noJugadorY[i], anchoNoJugador, altoNoJugador);
+            rNPC = new Rectangle(enemigoX[i], enemigoY[i], anchoEnemigo, altoEnemigo);
             if (rJugador.overlaps(rNPC)) {
                 return true;
             }
@@ -719,36 +762,36 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
 
     private void movimientoNPC(int i, float delta) {
         // Animacion vertical.
-        if (((noJugadorY[i] + delta > destinoY[i]) && (destinoY[i] > noJugadorY[i]))
-                || (noJugadorY[i] - delta < destinoY[i]) && (destinoY[i] < noJugadorY[i])) {
+        if (((enemigoY[i] + delta > destinoY[i]) && (destinoY[i] > enemigoY[i]))
+                || (enemigoY[i] - delta < destinoY[i]) && (destinoY[i] < enemigoY[i])) {
             destinoY[i] = (float) (Math.random() * mapaAlto);
-            if (noJugadorY[i] < destinoY[i]) {
-                noJugador[i] = noJugadorArriba;
+            if (enemigoY[i] < destinoY[i]) {
+                enemigo[i] = enemigoArriba;
             } else {
-                noJugador[i] = noJugadorAbajo;
+                enemigo[i] = enemigoAbajo;
             }
-        } else if (destinoY[i] > noJugadorY[i]) {
-            noJugadorY[i] += delta;
-            noJugador[i] = noJugadorArriba;
-        } else if (destinoY[i] < noJugadorY[i]) {
-            noJugadorY[i] -= delta;
-            noJugador[i] = noJugadorAbajo;
+        } else if (destinoY[i] > enemigoY[i]) {
+            enemigoY[i] += delta;
+            enemigo[i] = enemigoArriba;
+        } else if (destinoY[i] < enemigoY[i]) {
+            enemigoY[i] -= delta;
+            enemigo[i] = enemigoAbajo;
         }
         // Animacion horizontal.
-        if (((noJugadorX[i] + delta > destinoX[i]) && (destinoX[i] > noJugadorX[i]))
-                || (noJugadorX[i] - delta < destinoX[i]) && (destinoX[i] < noJugadorX[i])) {
+        if (((enemigoX[i] + delta > destinoX[i]) && (destinoX[i] > enemigoX[i]))
+                || (enemigoX[i] - delta < destinoX[i]) && (destinoX[i] < enemigoX[i])) {
             destinoX[i] = (float) (Math.random() * mapaAncho);
-            if (noJugadorX[i] < destinoX[i]) {
-                noJugador[i] = noJugadorDerecha;
+            if (enemigoX[i] < destinoX[i]) {
+                enemigo[i] = enemigoDerecha;
             } else {
-                noJugador[i] = noJugadorIzquierda;
+                enemigo[i] = enemigoIzquierda;
             }
-        } else if (destinoX[i] > noJugadorX[i]) {
-            noJugadorX[i] += delta;
-            noJugador[i] = noJugadorDerecha;
-        } else if (destinoX[i] < noJugadorX[i]) {
-            noJugadorX[i] -= delta;
-            noJugador[i] = noJugadorIzquierda;
+        } else if (destinoX[i] > enemigoX[i]) {
+            enemigoX[i] += delta;
+            enemigo[i] = enemigoDerecha;
+        } else if (destinoX[i] < enemigoX[i]) {
+            enemigoX[i] -= delta;
+            enemigo[i] = enemigoIzquierda;
         }
     }
 
