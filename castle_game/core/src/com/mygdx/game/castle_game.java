@@ -116,10 +116,10 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     private Sound sonidoVictoria;
 
     // Booleanos para fin de juego
-    private boolean caida, cazado, hundido, victoria;
+    private boolean caida, cazado, hundido, victoria, tesoroConseguido;
 
     // Objeto font para mensajes en pantalla
-    private BitmapFont font, tesoros;
+    private BitmapFont font;
 
     /**
      * Metodo create. Carga y crea objetos y atributos del juego
@@ -319,8 +319,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         anchoTesoro = (cuadroActual.getRegionWidth() / 2) / 2;//ajustamos las colisiones H
         altoTesoro = (cuadroActual.getRegionHeight()) / 2;
 
-        tesoros = new BitmapFont();
-
         // Inicializa la musica de fondo del juego.
         musica = Gdx.audio.newMusic(Gdx.files.internal("sonidos/main.mp3"));
         musica.play();
@@ -365,15 +363,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         cuadroActual = (TextureRegion) jugador.getKeyFrame(stateTimePC);
         sb.setProjectionMatrix(camara.combined);
 
-/*        if (cogeTesoro()) {
-            CharSequence str = "¡Has conseguido un tesoro! te quedan " + restantes;
-            sb.begin();
-            tesoros.getData().setScale(1f);
-            tesoros.setColor(Color.WHITE);
-            tesoros.draw(sb, str, 50, 30);
-            sb.end();
-        }*/
-
         sb.begin();
 
         if (!cazado && !caida && !hundido && !victoria) {
@@ -402,6 +391,17 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             sb.draw(cuadroActual, tesoro4X, tesoro4Y);
 
             sb.end();
+
+            if (tesoroConseguido) {
+                sb = new SpriteBatch();
+                font = new BitmapFont();
+                sb.begin();
+                CharSequence str = "¡Has conseguido un tesoro! te quedan " + restantes;
+                font.getData().setScale(0.95f);
+                font.setColor(Color.WHITE);
+                font.draw(sb, str, 165, 23);
+                sb.end();
+            }
 
             // Pinta la sexta capa del mapa de baldosas.
             capas = new int[1];
@@ -670,7 +670,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             destinoX[i] = jugadorX;
             destinoY[i] = jugadorY;
         } else {
-            System.out.println("No te ve");
             enemigoArriba = tempArriba;
             enemigoAbajo = tempAbajo;
             enemigoIzquierda = tempIzquierda;
@@ -720,6 +719,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 conseguidos++;
                 restantes--;
                 System.out.println("¡Has conseguido un tesoro! te quedan " + restantes);
+                tesoroConseguido = true;
             }
         } else {
             victoria = true;
