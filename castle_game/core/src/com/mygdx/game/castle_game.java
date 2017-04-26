@@ -39,21 +39,13 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     private Texture img, img2;
     // Atributo que permite dibujar imagenes 2D, en este caso el sprite.
     private SpriteBatch sb;
-    // Animacion que se muestra en el metodo render()
-    private Animation jugador;
+    // Animaciones que se muestra en el metodo render()
     // Animaciones para cada una de las direcciones de movimiento del personaje del jugador.
-    private Animation jugadorArriba;
-    private Animation jugadorDerecha;
-    private Animation jugadorAbajo;
-    private Animation jugadorIzquierda;
-    // Tamano del mapa de baldosas.
-    private int mapaAncho, mapaAlto;
-    // Atributos que indican la anchura y la altura de un tile del mapa de baldosas
-    private int anchoCelda, altoCelda;
-    // Posicion actual del jugador.
-    private float jugadorX, jugadorY;
-    // Este atributo indica el tiempo en segundos transcurridos desde que se inicia la animacion
-    private float stateTimePC;
+    private Animation jugador, jugadorArriba, jugadorDerecha, jugadorAbajo, jugadorIzquierda;
+    // Tamano del mapa de baldosas y la anchura y la altura de un tile del mapa de baldosas
+    private int mapaAncho, mapaAlto, anchoCelda, altoCelda;
+    // Posicion actual del jugador. atributo indica el tiempo en segundos transcurridos desde que se inicia la animacion
+    private float jugadorX, jugadorY, stateTimePC;
     // Frame que se va a mostrar en cada momento.
     private TextureRegion cuadroActual;
     private boolean[][] obstaculo, agujero, barco;
@@ -61,31 +53,21 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     // Atributos que indican la anchura y altura del sprite animado del jugador.
     private int anchoJugador, altoJugador;
     // Animaciones posicionales relacionadas con los NPC del juego
-    private Animation enemigoArriba;
-    private Animation enemigoDerecha;
-    private Animation enemigoAbajo;
-    private Animation enemigoIzquierda;
-    // Animaciones posicionales relacionadas con los NPC del juego
-    private Animation enemigoRojoArriba;
-    private Animation enemigoRojoDerecha;
-    private Animation enemigoRojoAbajo;
-    private Animation enemigoRojoIzquierda;
+    private Animation enemigoArriba, enemigoDerecha, enemigoAbajo, enemigoIzquierda,
+            enemigoRojoArriba, enemigoRojoDerecha, enemigoRojoAbajo, enemigoRojoIzquierda;
 
-    private Animation tempArriba = enemigoArriba;
-    private Animation tempAbajo = enemigoAbajo;
-    private Animation tempIzquierda = enemigoIzquierda;
-    private Animation tempDerecha = enemigoDerecha;
+    // Se guardan las animaciones iniciales para pivotar
+    private Animation tempArriba = enemigoArriba,
+            tempAbajo = enemigoAbajo,
+            tempIzquierda = enemigoIzquierda,
+            tempDerecha = enemigoDerecha;
 
     // Array con los objetos Animation de los NPC
     private Animation[] enemigo;
     // Atributos que indican la anchura y altura del sprite animado de los NPC.
     private int anchoEnemigo, altoEnemigo;
-    // Posiciones iniciales de cada uno de los NPC
-    private float[] enemigoX;
-    private float[] enemigoY;
-    // Posiciones finales de cada uno de los NPC
-    private float[] destinoX;
-    private float[] destinoY;
+    // Posiciones iniciales y finales de cada uno de los NPC
+    private float[] enemigoX, enemigoY, destinoX, destinoY;
     // Atributo que indica el tiempo en segundos transcurridos desde que se inicia la animacion
     private float stateTimeNPC = 0;
 
@@ -108,12 +90,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     private Music musica;
 
     // Sonidos
-    private Sound sonidoPasos;
-    private Sound sonidoColisionEnemigo;
-    private Sound sonidoObstaculo;
-    private Sound sonidoCaida;
-    private Sound sonidoBarco;
-    private Sound sonidoVictoria;
+    private Sound sonidoPasos, sonidoColisionEnemigo, sonidoObstaculo, sonidoCaida, sonidoBarco, sonidoVictoria;
 
     // Booleanos para fin de juego
     private boolean caida, cazado, hundido, victoria, tesoroConseguido;
@@ -243,7 +220,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
 
         // Crea las animaciones posicionales de los NPC en modo persecucion
         // Carga la imagen de los frames del enemigo en el objeto img de la clase Texture.
-        img2 = new Texture(Gdx.files.internal("jugadores/enemigo2.png"));
+        img2 = new Texture(Gdx.files.internal("jugadores/enemigoRojo.png"));
 
         // Sacamos los frames de img2 en un array de TextureRegion.
         tmp = TextureRegion.split(img2, img2.getWidth() / FRAME_COLSnPC, img2.getHeight() / FRAME_ROWSnPC);
