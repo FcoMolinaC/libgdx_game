@@ -98,6 +98,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     // Objeto font para mensajes en pantalla
     private BitmapFont font;
 
+
     /**
      * Metodo create. Carga y crea objetos y atributos del juego
      *
@@ -374,9 +375,15 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 font = new BitmapFont();
                 sb.begin();
                 CharSequence str = "¡Has conseguido un tesoro! te quedan " + restantes;
-                font.getData().setScale(0.95f);
-                font.setColor(Color.WHITE);
-                font.draw(sb, str, 165, 23);
+                if (Gdx.app.getType().toString() == "Android") {
+                    font.getData().setScale(2.65f);
+                    font.setColor(Color.WHITE);
+                    font.draw(sb, str, 450, 45);
+                } else {
+                    font.getData().setScale(0.95f);
+                    font.setColor(Color.WHITE);
+                    font.draw(sb, str, 165, 23);
+                }
                 sb.end();
             }
 
@@ -395,7 +402,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             sb.begin();
             CharSequence str = "GAME OVER";
             font.setColor(Color.RED);
-            font.draw(sb, str, (camara.viewportWidth / 2f) - 75f, (camara.viewportHeight / 2f) + 35f);
+            font.draw(sb, str, (Gdx.graphics.getWidth() / 2f) - 75f, (Gdx.graphics.getHeight() / 2f) + 35f);
             sb.end();
             if (caida) {
                 musica.stop();
@@ -404,7 +411,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 sb.begin();
                 font.getData().setScale(1.5f);
                 font.setColor(Color.RED);
-                font.draw(sb, str2, (camara.viewportWidth / 2f) - 100f, (camara.viewportHeight / 2f) + 7f);
+                font.draw(sb, str2, (Gdx.graphics.getWidth() / 2f) - 100f, (Gdx.graphics.getHeight() / 2f) + 7f);
                 sb.end();
             }
             if (cazado) {
@@ -414,7 +421,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 sb.begin();
                 font.getData().setScale(1.5f);
                 font.setColor(Color.RED);
-                font.draw(sb, str3, (camara.viewportWidth / 2f) - 150f, (camara.viewportHeight / 2f) + 7f);
+                font.draw(sb, str3, (Gdx.graphics.getWidth() / 2f) - 150f, (Gdx.graphics.getHeight() / 2f) + 7f);
                 sb.end();
             }
             if (hundido) {
@@ -424,7 +431,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 sb.begin();
                 font.getData().setScale(1.5f);
                 font.setColor(Color.RED);
-                font.draw(sb, str4, (camara.viewportWidth / 2f) - 125f, (camara.viewportHeight / 2f) + 7f);
+                font.draw(sb, str4, (Gdx.graphics.getWidth() / 2f) - 125f, (Gdx.graphics.getHeight() / 2f) + 7f);
                 sb.end();
             }
             if (victoria) {
@@ -435,7 +442,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 sb.begin();
                 font.getData().setScale(2.5f);
                 font.setColor(Color.GREEN);
-                font.draw(sb, str5, (camara.viewportWidth / 2f) - 120f, (camara.viewportHeight / 2f) + 5f);
+                font.draw(sb, str5, (Gdx.graphics.getWidth() / 2f) - 120f, (Gdx.graphics.getHeight() / 2f) + 5f);
                 sb.end();
             }
             // Espera 3 segundos y cierra el juego
@@ -477,9 +484,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     public boolean keyDown(int keycode) {
         // Si se pulsa uno de los cursores, se desplaza el sprite de forma adecuada un pixel
         stateTimePC = 0;
-
         actualizaPC(keycode);
-
         // Si se pulsa la tecla del numero 1, se alterna la visibilidad de la primera capa del mapa de baldosas.
         if (keycode == Input.Keys.NUM_1)
             mapa.getLayers().get(0).setVisible(!mapa.getLayers().get(0).isVisible());
@@ -558,7 +563,16 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         colisionNPC();
         caidaAgujero();
         caidaBarco();
-
+        if (conseguidos < 4) {
+            if (cogeTesoro()) {
+                conseguidos++;
+                restantes--;
+                System.out.println("¡Has conseguido un tesoro! te quedan " + restantes);
+                tesoroConseguido = true;
+            }
+        } else {
+            victoria = true;
+        }
         return true;
     }
 
@@ -635,7 +649,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
      * @param delta
      */
     private void actualizaNPC(int i, float delta) {
-
         // Animacion vetical.
         if (vistoNPC()) {
             System.out.println("¡Te han visto!");
@@ -664,7 +677,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         float jugadorAnteriorX = jugadorX;
         float jugadorAnteriorY = jugadorY;
 
-
         int speed = 2;
         if (keycode == Input.Keys.LEFT) {
             jugadorX += -speed;
@@ -690,7 +702,6 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         colisionNPC();
         caidaAgujero();
         caidaBarco();
-
         if (conseguidos < 4) {
             if (cogeTesoro()) {
                 conseguidos++;
@@ -724,7 +735,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
      * Metodo colisionNPC. Comprueba colision con enemigos
      */
     private boolean vistoNPC() {
-        // Calcula el rectangulo en torno al jugador.
+        // Calcula el rectangulo en torno al jugador. Campo de vision ficticio del enemigo.
         Rectangle rJugador = new Rectangle(jugadorX, jugadorY, 150, 150);
         Rectangle rNPC;
         // Recorre el array de NPC, para cada uno genera su rectangulo envolvente y comprueba si hay solape.
