@@ -28,7 +28,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     private static final int FRAME_COLSnPC = 3;
     private static final int FRAME_ROWSnPC = 4;
     // Numero de NPC que aparecen en el juego
-    private static final int numeroNPCs = 2;
+    private static final int numeroNPCs = 3;
     // Objeto que recoge el mapa de baldosas
     private TiledMap mapa;
     // Objeto con el que se pinta el mapa de baldosas
@@ -41,7 +41,11 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     private SpriteBatch sb;
     // Animaciones que se muestra en el metodo render()
     // Animaciones para cada una de las direcciones de movimiento del personaje del jugador.
-    private Animation jugador, jugadorArriba, jugadorDerecha, jugadorAbajo, jugadorIzquierda;
+    private Animation<TextureRegion> jugador;
+    private Animation<TextureRegion> jugadorArriba;
+    private Animation<TextureRegion> jugadorDerecha;
+    private Animation<TextureRegion> jugadorAbajo;
+    private Animation<TextureRegion> jugadorIzquierda;
     // Tamano del mapa de baldosas y la anchura y la altura de un tile del mapa de baldosas
     private int mapaAncho, mapaAlto, anchoCelda, altoCelda;
     // Posicion actual del jugador. atributo indica el tiempo en segundos transcurridos desde que se inicia la animacion
@@ -53,14 +57,20 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     // Atributos que indican la anchura y altura del sprite animado del jugador.
     private int anchoJugador, altoJugador;
     // Animaciones posicionales relacionadas con los NPC del juego
-    private Animation enemigoArriba, enemigoDerecha, enemigoAbajo, enemigoIzquierda,
-            enemigoRojoArriba, enemigoRojoDerecha, enemigoRojoAbajo, enemigoRojoIzquierda;
+    private Animation<TextureRegion> enemigoArriba;
+    private Animation<TextureRegion> enemigoDerecha;
+    private Animation<TextureRegion> enemigoAbajo;
+    private Animation<TextureRegion> enemigoIzquierda;
+    private Animation<TextureRegion> enemigoRojoArriba;
+    private Animation<TextureRegion> enemigoRojoDerecha;
+    private Animation<TextureRegion> enemigoRojoAbajo;
+    private Animation<TextureRegion> enemigoRojoIzquierda;
 
     // Se guardan las animaciones iniciales para pivotar
-    private Animation tempArriba = enemigoArriba,
-            tempAbajo = enemigoAbajo,
-            tempIzquierda = enemigoIzquierda,
-            tempDerecha = enemigoDerecha;
+    private Animation<TextureRegion> tempArriba = enemigoArriba;
+    private Animation<TextureRegion> tempAbajo = enemigoAbajo;
+    private Animation<TextureRegion> tempIzquierda = enemigoIzquierda;
+    private Animation<TextureRegion> tempDerecha = enemigoDerecha;
 
     // Array con los objetos Animation de los NPC
     private Animation[] enemigo;
@@ -72,7 +82,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
     private float stateTimeNPC = 0;
 
     // Animacion de los tesoros que se muestra en el metodo render()
-    private Animation tesoro;
+    private Animation<TextureRegion> tesoro;
 
     // Posicion actual de los tesoros.
     private float tesoro1X, tesoro1Y, tesoro2X, tesoro2Y, tesoro3X, tesoro3Y, tesoro4X, tesoro4Y;
@@ -121,10 +131,10 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         // Saca los frames de img en un array de TextureRegion.
         TextureRegion[][] tmp = TextureRegion.split(img, img.getWidth() / FRAME_COLS, img.getHeight() / FRAME_ROWS);
 
-        jugadorArriba = new Animation(0.150f, tmp[3]);
-        jugadorDerecha = new Animation(0.150f, tmp[2]);
-        jugadorAbajo = new Animation(0.150f, tmp[0]);
-        jugadorIzquierda = new Animation(0.150f, tmp[1]);
+        jugadorArriba = new Animation<TextureRegion>(0.150f, tmp[3]);
+        jugadorDerecha = new Animation<TextureRegion>(0.150f, tmp[2]);
+        jugadorAbajo = new Animation<TextureRegion>(0.150f, tmp[0]);
+        jugadorIzquierda = new Animation<TextureRegion>(0.150f, tmp[1]);
 
         // Posicion inicial
         jugador = jugadorAbajo;
@@ -186,7 +196,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         }
 
         // Carga en los atributos del ancho y alto del sprite sus valores
-        cuadroActual = (TextureRegion) jugador.getKeyFrame(stateTimePC);
+        cuadroActual = jugador.getKeyFrame(stateTimePC);
         anchoJugador = cuadroActual.getRegionHeight() / 2;//ajustamos las colisiones H
         altoJugador = cuadroActual.getRegionHeight();
 
@@ -205,13 +215,13 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         tmp = TextureRegion.split(img, img.getWidth() / FRAME_COLSnPC, img.getHeight() / FRAME_ROWSnPC);
 
         // Crea las distintas animaciones
-        enemigoArriba = new Animation(0.150f, tmp[3]);//0
+        enemigoArriba = new Animation<TextureRegion>(0.150f, tmp[3]);//0
         enemigoArriba.setPlayMode(Animation.PlayMode.LOOP);
-        enemigoDerecha = new Animation(0.150f, tmp[2]);//1
+        enemigoDerecha = new Animation<TextureRegion>(0.150f, tmp[2]);//1
         enemigoDerecha.setPlayMode(Animation.PlayMode.LOOP);
-        enemigoAbajo = new Animation(0.150f, tmp[0]);//2
+        enemigoAbajo = new Animation<TextureRegion>(0.150f, tmp[0]);//2
         enemigoAbajo.setPlayMode(Animation.PlayMode.LOOP);
-        enemigoIzquierda = new Animation(0.150f, tmp[1]);//3
+        enemigoIzquierda = new Animation<TextureRegion>(0.150f, tmp[1]);//3
         enemigoIzquierda.setPlayMode(Animation.PlayMode.LOOP);
 
         tempArriba = enemigoArriba;
@@ -227,17 +237,17 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         tmp = TextureRegion.split(img2, img2.getWidth() / FRAME_COLSnPC, img2.getHeight() / FRAME_ROWSnPC);
 
         // Crea las distintas animaciones
-        enemigoRojoArriba = new Animation(0.150f, tmp[3]);//0
+        enemigoRojoArriba = new Animation<TextureRegion>(0.150f, tmp[3]);//0
         enemigoRojoArriba.setPlayMode(Animation.PlayMode.LOOP);
-        enemigoRojoDerecha = new Animation(0.150f, tmp[2]);//1
+        enemigoRojoDerecha = new Animation<TextureRegion>(0.150f, tmp[2]);//1
         enemigoRojoDerecha.setPlayMode(Animation.PlayMode.LOOP);
-        enemigoRojoAbajo = new Animation(0.150f, tmp[0]);//2
+        enemigoRojoAbajo = new Animation<TextureRegion>(0.150f, tmp[0]);//2
         enemigoRojoAbajo.setPlayMode(Animation.PlayMode.LOOP);
-        enemigoRojoIzquierda = new Animation(0.150f, tmp[1]);//3
+        enemigoRojoIzquierda = new Animation<TextureRegion>(0.150f, tmp[1]);//3
         enemigoRojoIzquierda.setPlayMode(Animation.PlayMode.LOOP);
 
         // Carga en los atributos del ancho y alto del sprite del enemigo sus valores
-        cuadroActual = (TextureRegion) enemigoAbajo.getKeyFrame(stateTimeNPC);
+        cuadroActual = enemigoAbajo.getKeyFrame(stateTimeNPC);
         anchoEnemigo = cuadroActual.getRegionWidth() / 2;
         altoEnemigo = cuadroActual.getRegionHeight();
 
@@ -290,10 +300,10 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
 
         //Pone a cero el atributo stateTime, que marca el tiempo de ejecucion de la animacion.
         stateTimeTesoro = 0f;
-        tesoro = new Animation(0f, tmp[0]);
+        tesoro = new Animation<TextureRegion>(0f, tmp[0]);
 
         // Carga en los atributos del ancho y alto del sprite sus valores
-        cuadroActual = (TextureRegion) tesoro.getKeyFrame(stateTimeTesoro);
+        cuadroActual = tesoro.getKeyFrame(stateTimeTesoro);
         anchoTesoro = (cuadroActual.getRegionWidth() / 2) / 2;//ajustamos las colisiones H
         altoTesoro = (cuadroActual.getRegionHeight()) / 2;
 
@@ -338,7 +348,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         // Extrae el tiempo de la ultima actualizacion del sprite y la acumula a stateTime.
         stateTimePC += Gdx.graphics.getDeltaTime();
         // Extrae el frame que debe ir asociado a al momento actual.
-        cuadroActual = (TextureRegion) jugador.getKeyFrame(stateTimePC);
+        cuadroActual = jugador.getKeyFrame(stateTimePC);
         sb.setProjectionMatrix(camara.combined);
 
         sb.begin();
@@ -362,7 +372,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 sb.draw(cuadroActual, enemigoX[i], enemigoY[i]);
             }
 
-            cuadroActual = (TextureRegion) tesoro.getKeyFrame(stateTimeTesoro);
+            cuadroActual = tesoro.getKeyFrame(stateTimeTesoro);
             sb.draw(cuadroActual, tesoro1X, tesoro1Y);
             sb.draw(cuadroActual, tesoro2X, tesoro2Y);
             sb.draw(cuadroActual, tesoro3X, tesoro3Y);
@@ -375,7 +385,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 font = new BitmapFont();
                 sb.begin();
                 CharSequence str = "¡Has conseguido un tesoro! te quedan " + restantes;
-                if (Gdx.app.getType().toString() == "Android") {
+                if (Gdx.app.getType().toString().equals("Android")) {
                     font.getData().setScale(2.65f);
                     font.setColor(Color.WHITE);
                     font.draw(sb, str, 450, 45);
@@ -531,19 +541,23 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         if ((jugadorY + 48) < posicion.y) {
             jugadorY += 5;
             jugador = jugadorArriba;
+            //jugadorArriba.setPlayMode(Animation.PlayMode.LOOP);
             // Si pulsa por debajo de la animacion, se sube 5 pixeles y se reproduce.
         } else if ((jugadorY) > posicion.y) {
             jugadorY -= 5;
             jugador = jugadorAbajo;
+            //jugadorAbajo.setPlayMode(Animation.PlayMode.LOOP);
         }
         // Si pulsa mas de 24 pixels a dcha de la animacion, se sube 5 pixeles y se reproduce.
         if ((jugadorX + 24) < posicion.x) {
             jugadorX += 5;
             jugador = jugadorDerecha;
+            //jugadorDerecha.setPlayMode(Animation.PlayMode.LOOP);
             // Si pulsa mas de 24 pixels a izqda de la animacion, se sube 5 pixeles y se reproduce.
         } else if ((jugadorX - 24) > posicion.x) {
             jugadorX -= 5;
             jugador = jugadorIzquierda;
+            //jugadorIzquierda.setPlayMode(Animation.PlayMode.LOOP);
         }
 
         // Detecta las colisiones con los obstaculos del mapa y si el jugador se sale del mismo.
@@ -736,7 +750,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
      */
     private boolean vistoNPC() {
         // Calcula el rectangulo en torno al jugador. Campo de vision ficticio del enemigo.
-        Rectangle rJugador = new Rectangle(jugadorX, jugadorY, 150, 150);
+        Rectangle rJugador = new Rectangle(jugadorX, jugadorY, 200, 200);
         Rectangle rNPC;
         // Recorre el array de NPC, para cada uno genera su rectangulo envolvente y comprueba si hay solape.
         for (int i = 0; i < numeroNPCs; i++) {
