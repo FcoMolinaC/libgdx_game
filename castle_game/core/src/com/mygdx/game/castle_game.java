@@ -254,7 +254,8 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         // Se inicializan, la animacion por defecto y, de forma aleatoria, las posiciones iniciales y finales de los NPC
         for (int i = 0; i < numeroNPCs; i++) {
             enemigoX[i] = (float) (Math.random() * mapaAncho);
-            enemigoY[i] = (float) (Math.random() * mapaAlto);
+            // Se reduce la altura del mapa para que no aparezcan junto al jugador
+            enemigoY[i] = (float) (Math.random() * (mapaAlto - 100));
 
             if (i % 2 == 0) {
                 // NPC par => mover de forma vertical
@@ -365,7 +366,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
                 actualizaPC(Input.Keys.LEFT);
             if (Gdx.input.isTouched())
-                actualizaPCTactil(Gdx.input.getX(),  Gdx.input.getY());
+                actualizaPCTactil(Gdx.input.getX(), Gdx.input.getY());
 
             // Dibuja las animaciones de los NPC
             for (int i = 0; i < numeroNPCs; i++) {
