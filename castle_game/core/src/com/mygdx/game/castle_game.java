@@ -364,6 +364,8 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
                 actualizaPC(Input.Keys.RIGHT);
             if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
                 actualizaPC(Input.Keys.LEFT);
+            if (Gdx.input.isTouched())
+                actualizaPCTactil(Gdx.input.getX(),  Gdx.input.getY());
 
             // Dibuja las animaciones de los NPC
             for (int i = 0; i < numeroNPCs; i++) {
@@ -526,68 +528,7 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
      */
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        // Vector en tres dimensiones que recoge las coordenadas donde se ha hecho click o toque de la pantalla.
-        Vector3 clickCoordinates = new Vector3(screenX, screenY, 0);
-        // Transforma las coordenadas del vector a coordenadas de nuestra camara.
-        Vector3 posicion = camara.unproject(clickCoordinates);
-
-        stateTimePC = 0;
-
-        // Guarda la posicion anterior del jugador por si topa con un obstaculo, vuelve a la posicion anterior.
-        float jugadorAnteriorX = jugadorX;
-        float jugadorAnteriorY = jugadorY;
-
-        // Si pulsa por encima de la animacion, se sube 5 pixeles y se reproduce.
-        if ((jugadorY + 48) < posicion.y) {
-            jugadorY += 5;
-            jugador = jugadorArriba;
-            //jugadorArriba.setPlayMode(Animation.PlayMode.LOOP);
-            // Si pulsa por debajo de la animacion, se sube 5 pixeles y se reproduce.
-        } else if ((jugadorY) > posicion.y) {
-            jugadorY -= 5;
-            jugador = jugadorAbajo;
-            //jugadorAbajo.setPlayMode(Animation.PlayMode.LOOP);
-        }
-        // Si pulsa mas de 24 pixels a dcha de la animacion, se sube 5 pixeles y se reproduce.
-        if ((jugadorX + 24) < posicion.x) {
-            jugadorX += 5;
-            jugador = jugadorDerecha;
-            //jugadorDerecha.setPlayMode(Animation.PlayMode.LOOP);
-            // Si pulsa mas de 24 pixels a izqda de la animacion, se sube 5 pixeles y se reproduce.
-        } else if ((jugadorX - 24) > posicion.x) {
-            jugadorX -= 5;
-            jugador = jugadorIzquierda;
-            //jugadorIzquierda.setPlayMode(Animation.PlayMode.LOOP);
-        }
-
-        // Detecta las colisiones con los obstaculos del mapa y si el jugador se sale del mismo.
-        if ((jugadorX < 0 || jugadorY < 0 ||
-                jugadorX > (mapaAncho - anchoJugador) ||
-                jugadorY > (mapaAlto - altoJugador)) ||
-                ((obstaculo[(int) ((jugadorX + anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]) ||
-                        (obstaculo[(int) ((jugadorX + 3 * anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]))) {
-            jugadorX = jugadorAnteriorX;
-            jugadorY = jugadorAnteriorY;
-            sonidoObstaculo.play(0.5f);
-
-        } else {
-            sonidoPasos.play(0.25f);
-        }
-        colisionObstaculo(jugadorAnteriorX, jugadorAnteriorY);
-        colisionNPC();
-        caidaAgujero();
-        caidaBarco();
-        if (conseguidos < 4) {
-            if (cogeTesoro()) {
-                conseguidos++;
-                restantes--;
-                System.out.println("¡Has conseguido un tesoro! te quedan " + restantes);
-                tesoroConseguido = true;
-            }
-        } else {
-            victoria = true;
-        }
-        return true;
+        return false;
     }
 
     /**
@@ -601,7 +542,12 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
      */
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        return false;
+        jugadorArriba.setPlayMode(Animation.PlayMode.NORMAL);
+        jugadorAbajo.setPlayMode(Animation.PlayMode.NORMAL);
+        jugadorIzquierda.setPlayMode(Animation.PlayMode.NORMAL);
+        jugadorDerecha.setPlayMode(Animation.PlayMode.NORMAL);
+
+        return true;
     }
 
     /**
@@ -711,6 +657,82 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
             jugadorY += -speed;
             jugador = jugadorAbajo;
             jugadorAbajo.setPlayMode(Animation.PlayMode.LOOP);
+        }
+        colisionObstaculo(jugadorAnteriorX, jugadorAnteriorY);
+        colisionNPC();
+        caidaAgujero();
+        caidaBarco();
+        if (conseguidos < 4) {
+            if (cogeTesoro()) {
+                conseguidos++;
+                restantes--;
+                System.out.println("¡Has conseguido un tesoro! te quedan " + restantes);
+                tesoroConseguido = true;
+            }
+        } else {
+            victoria = true;
+        }
+    }
+
+    /**
+     * Metodo actualizaPCTactil. Metodo que actualiza posicion del jugador cuando se pulsa la pantalla
+     *
+     * @param screenX
+     * @param screenY
+     */
+    private void actualizaPCTactil(int screenX, int screenY) {
+        // Vector en tres dimensiones que recoge las coordenadas donde se ha hecho click o toque de la pantalla.
+        Vector3 clickCoordinates = new Vector3(screenX, screenY, 0);
+        // Transforma las coordenadas del vector a coordenadas de nuestra camara.
+        Vector3 posicion = camara.unproject(clickCoordinates);
+
+        stateTimePC = 0;
+
+        int speed = 2;
+
+        // Guarda la posicion anterior del jugador por si topa con un obstaculo, vuelve a la posicion anterior.
+        float jugadorAnteriorX = jugadorX;
+        float jugadorAnteriorY = jugadorY;
+
+        // Si pulsa por encima de la animacion, se sube 5 pixeles y se reproduce.
+        if ((jugadorY + 48) < posicion.y) {
+            jugadorY += speed;
+            jugadorY += 5;
+            jugador = jugadorArriba;
+            jugadorArriba.setPlayMode(Animation.PlayMode.LOOP);
+            // Si pulsa por debajo de la animacion, se sube 5 pixeles y se reproduce.
+        } else if ((jugadorY) > posicion.y) {
+            jugadorY += -speed;
+            jugadorY -= 5;
+            jugador = jugadorAbajo;
+            jugadorAbajo.setPlayMode(Animation.PlayMode.LOOP);
+        }
+        // Si pulsa mas de 24 pixels a dcha de la animacion, se sube 5 pixeles y se reproduce.
+        if ((jugadorX + 24) < posicion.x) {
+            jugadorX += speed;
+            jugadorX += 5;
+            jugador = jugadorDerecha;
+            jugadorDerecha.setPlayMode(Animation.PlayMode.LOOP);
+            // Si pulsa mas de 24 pixels a izqda de la animacion, se sube 5 pixeles y se reproduce.
+        } else if ((jugadorX - 24) > posicion.x) {
+            jugadorX += -speed;
+            jugadorX -= 5;
+            jugador = jugadorIzquierda;
+            jugadorIzquierda.setPlayMode(Animation.PlayMode.LOOP);
+        }
+
+        // Detecta las colisiones con los obstaculos del mapa y si el jugador se sale del mismo.
+        if ((jugadorX < 0 || jugadorY < 0 ||
+                jugadorX > (mapaAncho - anchoJugador) ||
+                jugadorY > (mapaAlto - altoJugador)) ||
+                ((obstaculo[(int) ((jugadorX + anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]) ||
+                        (obstaculo[(int) ((jugadorX + 3 * anchoJugador / 4) / anchoCelda)][((int) (jugadorY) / altoCelda)]))) {
+            jugadorX = jugadorAnteriorX;
+            jugadorY = jugadorAnteriorY;
+            sonidoObstaculo.play(0.5f);
+
+        } else {
+            sonidoPasos.play(0.25f);
         }
         colisionObstaculo(jugadorAnteriorX, jugadorAnteriorY);
         colisionNPC();
