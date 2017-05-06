@@ -610,8 +610,12 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
      * @param delta
      */
     private void actualizaNPC(int i, float delta) {
-        // Animacion vetical.
+        // Si se consigue un tesoro, el enemigos sube de velocidad
+        if (tesoroConseguido) {
+            delta += 0.1f;
+        }
         if (vistoNPC()) {
+            delta += 0.1f;
             System.out.println("¡Te han visto!");
             //  Cambia animaciones a enemigo2 (rojo)
             enemigoArriba = enemigoRojoArriba;
@@ -785,6 +789,9 @@ public class castle_game extends ApplicationAdapter implements InputProcessor {
         return false;
     }
 
+    /**
+     * Metodo movimientoNPC. Movimiento por defecto de los enemigos
+     */
     private void movimientoNPC(int i, float delta) {
         // Animacion vertical.
         if (((enemigoY[i] + delta > destinoY[i]) && (destinoY[i] > enemigoY[i]))
